@@ -1,0 +1,5 @@
+# compiled binary
+/target-c
+
+# fetched dependencies
+/.externals

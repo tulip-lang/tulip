@@ -12,6 +12,7 @@ PYPY_DIR=$(EXTERNALS)/pypy
 PYPY_TARGET=$(PYPY_DIR)/.make-target
 PYTHONPATH = $$PYTHONPATH:$(PYPY_DIR)
 RPYTHON_EXEC = $(PYTHON) $(PYPY_DIR)/rpython/bin/rpython $(BUILD_OPTS)
+PYTHON_EXEC = PYTHONPATH=$(PYTHONPATH) $(PYTHON)
 
 # -*- default help action -*- #
 .PHONY: help
@@ -45,6 +46,11 @@ build: $(DIST_BIN)
 .PHONY: run
 run: $(DIST_BIN)
 	$(DIST_BIN)
+
+.PHONY: run-interpreted
+run-interpreted: $(PYPY_TARGET)
+	$(PYTHON_EXEC) $(TARGET)
+
 
 .PHONY: clean
 clean:

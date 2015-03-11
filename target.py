@@ -17,3 +17,7 @@ def entry_point(argv):
 
 def target(*args):
     return (entry_point, None)
+
+if __name__ == '__main__':
+    from sys import argv
+    entry_point(argv)

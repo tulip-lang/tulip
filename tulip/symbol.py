@@ -18,7 +18,7 @@ class SymbolTable(object):
         except KeyError:
             symbol = Symbol(name, self.index)
             self.table[name] = symbol
-            self.reverse_table[self.index] = symbol
+            self.reverse_table.append(symbol)
             self.index += 1
             return symbol
 

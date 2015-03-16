@@ -5,13 +5,26 @@ class Int(Value):
     def __init__(self, value):
         self.value = value
 
-class Func(Value):
-    def __init__(self, bytecode, curried, remaining):
-        self.bytecode = bytecode
-        self.curried = curried
-        self.remaining = remaining
+class Callable(Value):
+    def arity(self):
+        raise "abstract"
 
-class Tagged(Value):
+    def invoke(self, rt, argv):
+        raise "abstract"
+
+class Func(Callable):
+    def __init__(self, bytecode, arity)
+        self._arity = arity
+        self.bytecode = bytecode
+
+    def arity(self):
+        return self._arity
+
+    def invoke(self, rt, argv):
+        frame = rt.make_frame(arity, argv)
+        rt.interpret(self.bytecode, frame)
+
+class Tagged(Callable):
     def __init__(self, symbol, args):
         self.symbol = symbol
         self.args = args

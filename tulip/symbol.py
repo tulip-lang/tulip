@@ -6,6 +6,9 @@ class Symbol(object):
     def __eql__(self, other):
         return self.id == other.id
 
+    def hash(self):
+        return self.id
+
 class SymbolTable(object):
     def __init__(self):
         self.table = {}

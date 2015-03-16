@@ -1,17 +1,10 @@
 from tulip.symbol import Symbol, SymbolTable
 from tulip.syntax import *
+from tulip.parser import parser
+from tulip.parser_gen import StringReader
 
 def entry_point(argv):
-    table = SymbolTable()
-
-    for arg in argv:
-        symbol = table.sym(arg)
-        print "arg: %s / %d" % (symbol.name, symbol.id)
-
-    print Lazy(Chain([ \
-        Apply([Tag(table.sym("add")), Int(1), Int(2)]), \
-        Apply([Tag(table.sym("mul")), Var(table.sym("x"))]), \
-    ])).dump()
+    print parser.parse(StringReader('1 2 h 1 2 asdf')).dump()
 
     return 0
 

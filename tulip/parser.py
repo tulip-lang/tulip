@@ -33,10 +33,7 @@ def apply(gen):
 @generate('chain')
 def chain(gen):
     first = gen.parse(apply)
-    rest = gen.parse(RANGLE.then(apply).many())
-    print 'first', first.dump()
-    print 'rest', rest.dump()
-    rest = rest.get_list()
+    rest = gen.parse(RANGLE.then(apply).many()).get_list()
     chain_size = len(rest) + 1
     out = [None] * chain_size
     out[0] = first.get_ast()

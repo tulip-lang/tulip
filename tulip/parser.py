@@ -26,7 +26,7 @@ RANGLE = lineme(string('>'))
 
 @generate('apply')
 def apply(gen):
-    apply_alt = alt(e_var, e_number).many1()
+    apply_alt = alt(var, number).many1()
     atoms = gen.parse(apply_alt).get_list()
     return ASTBox(Apply([a.get_ast() for a in atoms]))
 
@@ -43,7 +43,7 @@ def chain(gen):
     return ASTBox(Chain(out))
 
 
-e_var = IDENT.map(lambda s: ASTBox(Var(sym(s.get_string()))))
-e_number = NUMBER.map(lambda s: ASTBox(Int(int(s.get_string()))))
+var = IDENT.map(lambda s: ASTBox(Var(sym(s.get_string()))))
+number = NUMBER.map(lambda s: ASTBox(Int(int(s.get_string()))))
 
 parser = lines.then(chain)

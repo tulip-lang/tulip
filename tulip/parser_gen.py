@@ -1,12 +1,12 @@
 from rpython.rlib.rarithmetic import r_uint
-from rpython.rlib.rstring import StringBuilder
+from rpython.rlib.rstring import UnicodeBuilder
 
 class ParseState(object):
     def __init__(self, reader):
         self.reader = reader
         self.index = 0
         self.error_index = -1
-        self.error_messages = ['hello']
+        self.error_messages = [u'hello']
         self.bt_marks = []
         self.head = None
         self.ahead = []
@@ -18,11 +18,11 @@ class ParseState(object):
         # this is dumb
         ahead_copy = [x for x in self.ahead]
         ahead_copy.reverse()
-        return "<st %i [%s] %s [%s]>" % (
+        return u"<st %d [%s] %s [%s]>" % (
                 self.index,
-                ''.join(self.behind),
+                u''.join(self.behind),
                 self.head,
-                ''.join(ahead_copy)
+                u''.join(ahead_copy)
         )
 
     def mark(self):
@@ -68,7 +68,7 @@ class ParseState(object):
         self.advance_pos()
         if len(self.bt_marks) > 0: self.behind.append(self.head)
         if len(self.ahead) == 0:
-            self.head = self.reader.next()
+            self.head = unicode(self.reader.next())
         else:
             self.head = self.ahead.pop()
 
@@ -108,10 +108,11 @@ class Box(object):
 
     class String(Base):
         def __init__(self, s):
+            self.value = u'thing'
             self.value = s
 
         def dump(self):
-            return "<Box.String \"%s\">" % self.value
+            return u"<Box.String \"%s\">" % self.value
 
         def get_string(self):
             return self.value
@@ -124,8 +125,8 @@ class Box(object):
             return self.values
 
         def dump(self):
-            els = " ".join([box.dump() for box in self.values])
-            return "<Box.List [%s]>" % els
+            els = u" ".join([box.dump() for box in self.values])
+            return u"<Box.List [%s]>" % els
 
 class Result(object):
     pass
@@ -144,7 +145,7 @@ class ParseError(Exception):
         self.messages = messages
 
     def __str__(self):
-        return "parse error at %d:%d - expected one of %s" % \
+        return u"parse error at %d:%d - expected one of %s" % \
           (self.lineno, self.colno, ", ".join(self.messages))
 
 class Parser(object):
@@ -163,7 +164,7 @@ class Parser(object):
                 if state.head is None:
                     return result.box
                 else:
-                    raise ParseError(state.lineno, state.colno, ['EOF'])
+                    raise ParseError(state.lineno, state.colno, [u'EOF'])
 
             assert False, "impossible"
         finally:
@@ -339,7 +340,7 @@ class Scan(Parser):
     def perform(self, st):
         result = None
         aggregate = []
-        builder = StringBuilder()
+        builder = UnicodeBuilder()
 
         while True:
             start_index = st.index
@@ -390,7 +391,7 @@ class Test(Parser):
             st.advance1()
             return Success(Box.String(head))
         else:
-            st.error('predicate')
+            st.error(u'predicate')
             return Failure()
 
 def generate(desc_or_fn):
@@ -404,7 +405,7 @@ def generate(desc_or_fn):
 def char_range(start, end):
     def _range_test(x):
         out = x is not None and start <= x <= end
-        print "test: %s <= %s <= %s: %s" % (start, x, end, out)
+        print u"test: %s <= %s <= %s: %s" % (start, x, end, out)
         return out
     return Test(_range_test)
 
@@ -438,18 +439,19 @@ class FileReader(Reader):
         self.fname = fname
         self.fdesc = None
         self.isEof = False
-        self.buf = ''
+        self.buf = u''
         self.bufIndex = r_uint(0)
 
     def setup(self):
         self.fdesc = open(self.fname)
+        self.fdesc.encoding = 'UTF-8'
 
     def next(self):
         if self.bufIndex >= len(self.buf):
             if self.isEof:
                 return None
             else:
-                self.buf = self.fdesc.read(self.bufsize)
+                self.buf = unicode(self.fdesc.read(self.bufsize))
                 self.bufIndex = 0
 
         out = self.buf[self.bufIndex]

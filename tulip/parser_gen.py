@@ -212,12 +212,11 @@ def _scan1_map(box):
     first, rest = box.get_list()
     return Box.String(first.get_string() + rest.get_string())
 
+class _StopParse(Exception):
+    pass
+
 class Generated(Parser):
     class ParseGen(object):
-        class StopParse(Exception):
-            def __init__(self, result):
-                self.result = result
-
         def __init__(self, st):
             self.st = st
 
@@ -227,23 +226,23 @@ class Generated(Parser):
             if isinstance(result, Success):
                 return result.box
             else:
-                raise StopParse(result)
+                raise _StopParse()
 
-    def run(gen_fn):
-        try:
-            result = gen_fn(self)
-            if isinstance(result, Parser):
-                return self.parse(result)
-            else:
-                return Success(result)
-        except StopParse as s:
-            return s.result
+        def run(self, gen_fn):
+            try:
+                result = gen_fn(self)
+                if isinstance(result, Parser):
+                    return self.parse(result)
+                else:
+                    return Success(result)
+            except _StopParse:
+                return Failure()
 
     def __init__(self, gen_fn):
         self.gen_fn = gen_fn
 
     def perform(self, st):
-        return ParseGen(st).run(self.gen_fn)
+        return Generated.ParseGen(st).run(self.gen_fn)
 
 class Desc(Parser):
     def __init__(self, parser, desc):

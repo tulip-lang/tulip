@@ -10,24 +10,43 @@ class ASTBox(Box.Base):
         return self.syntax
 
     def dump(self):
-        return u"<Box AST %s>" % self.syntax.dump()
+        return u"<Box AST (%s)>" % self.syntax.dump()
 
 whitespace = one_of(u" \t").many()
 nl = alt(string(u"\n"), string(u"\r\n"))
 comment = seq(string(u'#'), none_of(u"\n").many(), nl)
-lines = alt(nl, comment, string(u";")).many()
-
-@generate('expr')
-def expr(gen):
-    return gen.parse(alt(e_var, e_number).many())
+lines = seq(alt(nl, comment, string(u";")).many(), whitespace)
 
 lexeme = lambda p: p.skip(whitespace)
 lineme = lambda p: p.skip(lines)
 
-number = lexeme(char_range(u'0', u'9').scan1()).desc(u'number')
-ident = lexeme(char_range(u'a', u'z').scan1()).desc(u'ident')
+NUMBER = lexeme(char_range(u'0', u'9').scan1()).desc(u'number')
+IDENT = lexeme(char_range(u'a', u'z').scan1()).desc(u'ident')
+RANGLE = lineme(string('>'))
 
-e_var = ident.map(lambda s: ASTBox(Var(sym(s.get_string()))))
-e_number = number.map(lambda s: ASTBox(Int(int(s.get_string()))))
+@generate('apply')
+def apply(gen):
+    apply_alt = alt(e_var, e_number).many1()
+    atoms = gen.parse(apply_alt).get_list()
+    return ASTBox(Apply([a.get_ast() for a in atoms]))
 
-parser = lines.then(expr)
+@generate('chain')
+def chain(gen):
+    first = gen.parse(apply)
+    rest = gen.parse(RANGLE.then(apply).many())
+    print 'first', first.dump()
+    print 'rest', rest.dump()
+    rest = rest.get_list()
+    chain_size = len(rest) + 1
+    out = [None] * chain_size
+    out[0] = first.get_ast()
+    for i in range(0, chain_size-1):
+        out[i+1] = rest[i].get_ast()
+
+    return ASTBox(Chain(out))
+
+
+e_var = IDENT.map(lambda s: ASTBox(Var(sym(s.get_string()))))
+e_number = NUMBER.map(lambda s: ASTBox(Int(int(s.get_string()))))
+
+parser = lines.then(chain)

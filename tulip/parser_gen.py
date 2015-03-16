@@ -348,7 +348,7 @@ class Scan(Parser):
             result = self.parser.perform(st)
 
             if isinstance(result, Success):
-                assert st.index > start_index, "empty many!"
+                assert st.index > start_index, "empty scan!"
                 builder.append(result.box.get_string())
             else:
                 print "many succeeds"

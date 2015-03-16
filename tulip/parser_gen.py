@@ -173,7 +173,7 @@ class Parser(object):
             reader.teardown()
 
     def desc(self, desc):
-        return Desc(self, desc)
+        return Desc(self, unicode(desc))
 
     def many(self):
         return Many(self)

@@ -405,7 +405,7 @@ def generate(desc_or_fn):
 def char_range(start, end):
     def _range_test(x):
         out = x is not None and start <= x <= end
-        print u"test: %s <= %s <= %s: %s" % (start, x, end, out)
+        # print u"test: %s <= %s <= %s: %s" % (start, x, end, out)
         return out
     return Test(_range_test)
 

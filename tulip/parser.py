@@ -10,7 +10,7 @@ class ASTBox(Box.Base):
         return self.syntax
 
     def dump(self):
-        return u"<Box AST (%s)>" % self.syntax.dump()
+        return u"<Box.AST (%s)>" % self.syntax.dump()
 
 whitespace = one_of(u" \t").many()
 nl = alt(string(u"\n"), string(u"\r\n"))
@@ -21,13 +21,22 @@ lexeme = lambda p: p.skip(whitespace)
 lineme = lambda p: p.skip(lines)
 
 NUMBER = lexeme(char_range(u'0', u'9').scan1()).desc(u'number')
-IDENT = lexeme(char_range(u'a', u'z').scan1()).desc(u'ident')
+IDENT =  lexeme(char_range(u'a', u'z').scan1()).desc(u'ident')
 RANGLE = lineme(string('>'))
+LPAREN = lineme(string('('))
+RPAREN = lexeme(string(')'))
+LBRACE = lineme(string('['))
+RBRACE = lineme(string(']'))
+DOLLAR = lexeme(string('$'))
+TAGGED = lexeme(string('.').then(IDENT))
+
+@generate('atom')
+def atom(gen):
+    return gen.parse(alt(var, number, paren, tag, autovar))
 
 @generate('apply')
 def apply(gen):
-    apply_alt = alt(var, number).many1()
-    atoms = gen.parse(apply_alt).get_list()
+    atoms = gen.parse(atom.many1()).get_list()
     return ASTBox(Apply([a.get_ast() for a in atoms]))
 
 @generate('chain')
@@ -45,5 +54,8 @@ def chain(gen):
 
 var = IDENT.map(lambda s: ASTBox(Var(sym(s.get_string()))))
 number = NUMBER.map(lambda s: ASTBox(Int(int(s.get_string()))))
+paren = LPAREN.then(chain).skip(RPAREN)
+autovar = DOLLAR.map(lambda _: ASTBox(Autovar()))
+tag = TAGGED.map(lambda s: ASTBox(Tag(sym(s.get_string()))))
 
 parser = lines.then(chain)

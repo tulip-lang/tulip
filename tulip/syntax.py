@@ -30,6 +30,10 @@ class Var(Syntax):
     def dump(self):
         return self.symbol.name
 
+class Autovar(Syntax):
+    def dump(self):
+        return u'$'
+
 class Apply(Syntax):
     def __init__(self, exprs):
         self.exprs = exprs

@@ -68,7 +68,7 @@ class ParseState(object):
         self.advance_pos()
         if len(self.bt_marks) > 0: self.behind.append(self.head)
         if len(self.ahead) == 0:
-            self.head = unicode(self.reader.next())
+            self.head = self.reader.next()
         else:
             self.head = self.ahead.pop()
 

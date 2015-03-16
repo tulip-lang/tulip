@@ -22,6 +22,10 @@ lineme = lambda p: p.skip(lines)
 
 number = lexeme(char_range(u'0', u'9').scan1()).desc(u'number')
 ident = lexeme(char_range(u'a', u'z').scan1()).desc(u'ident')
-expr = alt(number, ident).many()
+
+e_var = ident.map(lambda s: ASTBox(Var(sym(s.get_string()))))
+e_number = number.map(lambda s: ASTBox(Int(int(s.get_string()))))
+
+expr = alt(e_var, e_number).many().skip(lines)
 
 parser = lines.then(expr)

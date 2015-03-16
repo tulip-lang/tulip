@@ -140,6 +140,8 @@ class Success(Result):
 class Failure(Result):
     pass
 
+_failure = Failure()
+
 class ParseError(Exception):
     def __init__(self, lineno, colno, messages):
         self.lineno = lineno
@@ -160,7 +162,7 @@ class Parser(object):
             state = ParseState(reader)
             state.advance1()
             result = self.perform(state)
-            if isinstance(result, Failure):
+            if result is _failure:
                 raise ParseError(state.lineno, state.colno, state.error_messages)
             elif isinstance(result, Success):
                 if state.head is None:
@@ -236,7 +238,7 @@ class Generated(Parser):
                 else:
                     return Success(result)
             except _StopParse:
-                return Failure()
+                return _failure
 
     def __init__(self, gen_fn):
         self.gen_fn = gen_fn
@@ -252,7 +254,7 @@ class Desc(Parser):
     def perform(self, st):
         index = st.index
         result = self.parser.perform(st)
-        if isinstance(result, Failure):
+        if result is _failure:
             st.error_index = index
             st.error_messages = [self._desc]
 
@@ -302,7 +304,7 @@ class Seq(Parser):
         aggregate = [None] * len(self.parsers)
         for i in range(0, len(self.parsers)):
             result = self.parsers[i].perform(st)
-            if isinstance(result, Failure):
+            if result is _failure:
                 return result
             aggregate[i] = result.box
 
@@ -368,7 +370,7 @@ class string(Parser):
         for i in range(0, len(self.string)):
             if st.head != self.string[i]:
                 st.error(self.string)
-                return Failure()
+                return _failure
             else:
                 st.advance1()
 
@@ -385,7 +387,7 @@ class Test(Parser):
             return Success(Box.String(head))
         else:
             st.error(u'predicate')
-            return Failure()
+            return _failure
 
 def generate(desc_or_fn):
     if isinstance(desc_or_fn, str):
@@ -409,7 +411,7 @@ class Eof(Parser):
         if st.head is None:
             return Success(None)
         else:
-            return Failure()
+            return _failure
 
 eof = Eof()
 

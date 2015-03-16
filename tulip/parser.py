@@ -17,6 +17,10 @@ nl = alt(string(u"\n"), string(u"\r\n"))
 comment = seq(string(u'#'), none_of(u"\n").many(), nl)
 lines = alt(nl, comment, string(u";")).many()
 
+@generate('expr')
+def expr(gen):
+    return gen.parse(alt(e_var, e_number).many())
+
 lexeme = lambda p: p.skip(whitespace)
 lineme = lambda p: p.skip(lines)
 
@@ -25,7 +29,5 @@ ident = lexeme(char_range(u'a', u'z').scan1()).desc(u'ident')
 
 e_var = ident.map(lambda s: ASTBox(Var(sym(s.get_string()))))
 e_number = number.map(lambda s: ASTBox(Int(int(s.get_string()))))
-
-expr = alt(e_var, e_number).many().skip(lines)
 
 parser = lines.then(expr)

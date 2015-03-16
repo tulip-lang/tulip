@@ -368,11 +368,11 @@ class string(Parser):
 
     def perform(self, st):
         for i in range(0, len(self.string)):
-            if st.head != self.string[i]:
+            if st.head == self.string[i]:
+                st.advance1()
+            else:
                 st.error(self.string)
                 return _failure
-            else:
-                st.advance1()
 
         return Success(Box.String(self.string))
 

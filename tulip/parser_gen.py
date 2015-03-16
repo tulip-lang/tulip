@@ -267,10 +267,7 @@ class Alt(Parser):
         result = None
 
         for parser in self.parsers:
-            print "index-before: %d" % st.index
             result = parser.perform(st)
-            print "index-after: %d" % st.index
-            print "success: %s" % isinstance(result, Success)
 
             if isinstance(result, Success) or index != st.index:
                 break
@@ -323,14 +320,12 @@ class Many(Parser):
 
         while True:
             start_index = st.index
-            print st.dump()
             result = self.parser.perform(st)
 
             if isinstance(result, Success):
                 assert st.index > start_index, "empty many!"
                 aggregate.append(result.box)
             else:
-                print "many succeeds"
                 return Success(Box.List(aggregate))
 
 class Scan(Parser):
@@ -344,14 +339,12 @@ class Scan(Parser):
 
         while True:
             start_index = st.index
-            print st.dump()
             result = self.parser.perform(st)
 
             if isinstance(result, Success):
                 assert st.index > start_index, "empty scan!"
                 builder.append(result.box.get_string())
             else:
-                print "many succeeds"
                 return Success(Box.String(builder.build()))
 
 class Map(Parser):
@@ -387,7 +380,6 @@ class Test(Parser):
     def perform(self, st):
         head = st.head
         if self.pred(head):
-            print "test passed, advancing"
             st.advance1()
             return Success(Box.String(head))
         else:
@@ -403,11 +395,7 @@ def generate(desc_or_fn):
         return Generated(desc_or_fn)
 
 def char_range(start, end):
-    def _range_test(x):
-        out = x is not None and start <= x <= end
-        # print u"test: %s <= %s <= %s: %s" % (start, x, end, out)
-        return out
-    return Test(_range_test)
+    return Test(lambda x: x is not None and start <= x <= end)
 
 def one_of(string):
     return Test(lambda x: x is not None and x in string)

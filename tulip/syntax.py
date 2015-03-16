@@ -35,27 +35,27 @@ class Apply(Syntax):
         self.exprs = exprs
 
     def dump(self):
-        return " ".join([e.dump_nested() for e in self.exprs])
+        return u" ".join([e.dump_nested() for e in self.exprs])
 
     def dump_nested(self):
-        return "(%s)" % self.dump()
+        return u"(%s)" % self.dump()
 
 class Chain(Syntax):
     def __init__(self, exprs):
         self.exprs = exprs
 
     def dump(self):
-        return " > ".join([e.dump() for e in self.exprs])
+        return u" > ".join([e.dump() for e in self.exprs])
 
     def dump_nested(self):
-        return "(%s)" % self.dump()
+        return u"(%s)" % self.dump()
 
 class Lazy(Syntax):
     def __init__(self, expr):
         self.expr = expr
 
     def dump(self):
-        return "~%s" % self.expr.dump_nested()
+        return u"~%s" % self.expr.dump_nested()
 
 class Let(Syntax):
     class Clause(object):
@@ -73,4 +73,4 @@ class Tag(Syntax):
         self.symbol = symbol
 
     def dump(self):
-        return ".%s" % self.symbol.name
+        return u".%s" % self.symbol.name

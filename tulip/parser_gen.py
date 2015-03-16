@@ -409,10 +409,10 @@ def char_range(start, end):
         return out
     return Test(_range_test)
 
-def oneOf(string):
+def one_of(string):
     return Test(lambda x: x is not None and x in string)
 
-def noneOf(string):
+def none_of(string):
     return Test(lambda x: x is not None and not x in string)
 
 class Eof(Parser):

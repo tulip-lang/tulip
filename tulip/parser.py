@@ -1,5 +1,5 @@
 from tulip.syntax import *
-from tulip.parser_gen import string, generate, char_range, oneOf, noneOf, seq, alt, Box
+from tulip.parser_gen import string, generate, char_range, one_of, none_of, seq, alt, Box
 
 class ASTBox(Box):
     def __init__(self, syntax):
@@ -12,9 +12,9 @@ class ASTBox(Box):
     def dump(self):
         return u"<Box AST %s>" % self.syntax.dump()
 
-whitespace = oneOf(u" \t").many()
+whitespace = one_of(u" \t").many()
 nl = alt(string(u"\n"), string(u"\r\n"))
-comment = seq(string(u'#'), noneOf(u"\n").many(), nl)
+comment = seq(string(u'#'), none_of(u"\n").many(), nl)
 lines = alt(nl, comment, string(u";")).many()
 
 lexeme = lambda p: p.skip(whitespace)

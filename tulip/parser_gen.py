@@ -150,7 +150,7 @@ class ParseError(Exception):
 
 class Parser(object):
     def perform(self, st):
-        raise "abstract"
+        assert False, "abstract"
 
     def parse(self, reader):
         reader.setup()

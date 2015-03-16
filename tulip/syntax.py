@@ -1,5 +1,8 @@
 from tulip.symbol import Symbol, SymbolTable
 
+_symbol_table = SymbolTable()
+sym = _symbol_table.sym
+
 class Syntax(object):
     def dump_nested(self):
         return self.dump()

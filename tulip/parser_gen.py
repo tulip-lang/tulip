@@ -364,7 +364,7 @@ class Map(Parser):
 
 class string(Parser):
     def __init__(self, string):
-        self.string = string
+        self.string = unicode(string)
 
     def perform(self, st):
         for i in range(0, len(self.string)):

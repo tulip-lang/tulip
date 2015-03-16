@@ -1,7 +1,7 @@
 from tulip.syntax import *
 from tulip.parser_gen import string, generate, char_range, one_of, none_of, seq, alt, Box
 
-class ASTBox(Box):
+class ASTBox(Box.Base):
     def __init__(self, syntax):
         assert isinstance(syntax, Syntax)
         self.syntax = syntax

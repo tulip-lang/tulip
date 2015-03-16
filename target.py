@@ -4,7 +4,7 @@ from tulip.parser import parser
 from tulip.parser_gen import StringReader
 
 def entry_point(argv):
-    print parser.parse(StringReader('1 2 h 1 2 asdf')).dump()
+    print parser.parse(StringReader(u'1 2 h 1 2 asdf')).dump()
 
     return 0
 

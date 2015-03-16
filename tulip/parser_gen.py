@@ -50,7 +50,7 @@ class ParseState(object):
 
     def advance_pos(self):
         self.index += 1
-        if self.head == "\n":
+        if self.head == u"\n":
             self.lineno += 1
             self.colno = 0
         else:
@@ -58,7 +58,7 @@ class ParseState(object):
 
     def rewind_pos(self):
         self.index -= 1
-        if self.head == "\n":
+        if self.head == u"\n":
             self.lineno -= 1
             self.colno = -1 # counts backwards? i guess?
         else:

@@ -71,12 +71,14 @@ class ParseState(object):
             self.head = self.reader.next()
         else:
             self.head = self.ahead.pop()
+        print u"adv: %s" % self.dump()
 
     def rewind1(self):
         assert len(self.behind) > 0, "can't rewind anymore!"
         self.ahead.append(self.head)
         self.head = self.behind.pop()
         self.rewind_pos()
+        print u"rew: %s" % self.dump()
 
     def advance(self, steps=1):
         assert steps > 0, "can't advance a negative number of times"

@@ -21,7 +21,7 @@ class Int(Syntax):
         self.value = value
 
     def dump(self):
-        return "%d" % self.value
+        return u"%d" % self.value
 
 class Var(Syntax):
     def __init__(self, symbol):

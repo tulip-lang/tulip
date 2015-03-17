@@ -54,7 +54,9 @@ def apply(gen):
 @generate('chain')
 def chain(gen):
     first = gen.parse(apply)
+    gen.parse(LINES)
     rest = gen.parse(RANGLE.then(apply).many()).get_list()
+    gen.parse(LINES)
     chain_size = len(rest) + 1
     out = [None] * chain_size
     out[0] = first.get_ast()

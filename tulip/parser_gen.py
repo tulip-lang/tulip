@@ -18,7 +18,7 @@ class ParseState(object):
         # this is dumb
         ahead_copy = [x for x in self.ahead]
         ahead_copy.reverse()
-        return u"<st %d [%s] %s [%s]>" % (
+        return u"(st %d <<%s>> %s <<%s>>)" % (
                 self.index,
                 u''.join(self.behind),
                 self.head,

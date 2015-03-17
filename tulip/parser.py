@@ -20,8 +20,18 @@ LINES = seq(alt(nl, comment, string(u";")).many(), whitespace)
 lexeme = lambda p: p.skip(whitespace)
 lineme = lambda p: p.skip(LINES)
 
-NUMBER = lexeme(char_range(u'0', u'9').scan1()).desc(u'number')
-IDENT =  lexeme(char_range(u'a', u'z').scan1()).desc(u'ident')
+digit = char_range(u'0', u'9')
+ident_start = char_range(u'a', u'z')
+ident_ch = alt(char_range(u'a', u'z'), one_of(u'-_'), digit)
+
+@generate
+def ident(gen):
+    start = gen.parse(ident_start).get_string()
+    rest = gen.parse(ident_ch.scan()).get_string()
+    return Box.String(start + rest)
+
+NUMBER = lexeme(digit.scan1()).desc(u'number')
+IDENT =  lexeme(ident).desc(u'ident')
 RANGLE = lineme(string('>'))
 LPAREN = lineme(string('('))
 RPAREN = lexeme(string(')'))

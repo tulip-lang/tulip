@@ -81,14 +81,14 @@ class ParseState(object):
         print u"rew: %s" % self.dump()
 
     def advance(self, steps=1):
-        assert steps > 0, "can't advance a negative number of times"
+        assert steps > 0, "can't advance %d times" % steps
         for _ in range(steps):
-            self.advance1(steps)
+            self.advance1()
 
     def rewind(self, steps=1):
-        assert steps > 0, "can't rewind a negative number of times"
+        assert steps >= 0, "can't rewind %d times" % steps
         for _ in range(steps):
-            self.rewind1(steps)
+            self.rewind1()
 
     def rewind_to(self, idx):
         steps = self.index - idx
@@ -198,6 +198,9 @@ class Parser(object):
     def then(self, other):
         return seq(self, other).map(_then_map)
 
+    def backtracking(self):
+        return Backtracking(self)
+
 def _skip_map(box):
     return box.get_list()[0]
 
@@ -276,7 +279,7 @@ class Alt(Parser):
 def alt(*parsers):
     return Alt(list(parsers))
 
-class Backtrack(Parser):
+class Backtracking(Parser):
     def __init__(self, parser):
         self.parser = parser
 

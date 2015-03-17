@@ -1,10 +1,28 @@
 from tulip.symbol import Symbol, SymbolTable
 from tulip.syntax import *
 from tulip.parser import parser
-from tulip.parser_gen import StringReader
+from tulip.parser_gen import StringReader, ParseError
+from sys import stdin
+from tulip.libedit import readline
+from os import environ
 
 def entry_point(argv):
-    print parser.parse(StringReader(u'1 2 > [ x => .h (.cons 2 [ .nil $ ]) [ $ ]]')).dump()
+    try:
+        DEBUG = unicode(environ['TULIP_DEBUG']).split(u',')
+    except KeyError:
+        DEBUG = []
+
+    debug_parser = (u'parser' in DEBUG)
+
+    while True:
+        try:
+            line = readline(': ')
+            print '=', parser.parse(StringReader(line), debug=debug_parser).dump()
+        except EOFError:
+            break
+        except ParseError as e:
+            print e.dump()
+
 
     return 0
 

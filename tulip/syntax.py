@@ -7,34 +7,37 @@ class Syntax(object):
     def dump_nested(self):
         return self.dump()
 
-class PatternSyntax(Syntax):
+    def dump(self):
+        assert False, "abstract"
+
+class Expr(Syntax):
     pass
 
-class ExprSyntax(Syntax):
+class Pattern(Syntax):
     pass
 
-class ModuleSyntax(Syntax):
+class ModuleItem(Syntax):
     pass
 
-class Int(Syntax):
+class Int(Expr):
     def __init__(self, value):
         self.value = value
 
     def dump(self):
         return u"%d" % self.value
 
-class Var(Syntax):
+class Var(Expr):
     def __init__(self, symbol):
         self.symbol = symbol
 
     def dump(self):
         return self.symbol.name
 
-class Autovar(Syntax):
+class Autovar(Expr):
     def dump(self):
         return u'$'
 
-class Apply(Syntax):
+class Apply(Expr):
     def __init__(self, exprs):
         self.exprs = exprs
 
@@ -44,7 +47,7 @@ class Apply(Syntax):
     def dump_nested(self):
         return u"(%s)" % self.dump()
 
-class Chain(Syntax):
+class Chain(Expr):
     def __init__(self, exprs):
         self.exprs = exprs
 
@@ -54,14 +57,14 @@ class Chain(Syntax):
     def dump_nested(self):
         return u"(%s)" % self.dump()
 
-class Lazy(Syntax):
+class Lazy(Expr):
     def __init__(self, expr):
         self.expr = expr
 
     def dump(self):
         return u"~%s" % self.expr.dump_nested()
 
-class Let(Syntax):
+class Let(Expr):
     class Clause(object):
         def __init__(self, name, patterns, expr):
             self.name = name
@@ -72,9 +75,58 @@ class Let(Syntax):
         self.clauses = clauses
         self.expr = expr
 
-class Tag(Syntax):
+class Lam(Expr):
+    class Clause(object):
+        def __init__(self, pattern, body):
+            self.pattern = pattern
+            self.body = body
+
+        def dump(self):
+            return u'%s => %s' % (self.pattern.dump(), self.body.dump())
+
+    def __init__(self, clauses):
+        self.clauses = clauses
+
+    def dump(self):
+        body = u'; '.join([c.dump() for c in self.clauses])
+        return u'[ %s ]' % body
+
+class Autolam(Expr):
+    def __init__(self, body):
+        self.body = body
+
+    def dump(self):
+        return u'[ %s ]' % self.body.dump()
+
+class Tag(Expr):
     def __init__(self, symbol):
         self.symbol = symbol
 
     def dump(self):
         return u".%s" % self.symbol.name
+
+class VarPat(Pattern):
+    def __init__(self, symbol):
+        self.symbol = symbol
+
+    def dump(self):
+        return self.symbol.name
+
+class TagPat(Pattern):
+    def __init__(self, symbol, patterns):
+        self.symbol = symbol
+        self.patterns = patterns
+
+    def dump(self):
+        patterns = u" ".join([e.dump_nested() for e in self.patterns])
+        return u'.%s %s' % (self.symbol.name, patterns)
+
+    def dump_nested(self):
+        return u'(%s)' % self.dump()
+
+class NamedPat(Pattern):
+    def __init__(self, symbol):
+        self.symbol = symbol
+
+    def dump(self):
+        return u"%%%s" % self.symbol.name

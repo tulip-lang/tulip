@@ -34,11 +34,11 @@ $(PYPY_TARGET):
 # -*- build -*- #
 DIST_BIN = ./dist/bin/tulip
 CLEAN += $(DIST_BIN)
-SOURCE = target.py $(shell find tulip -name '*.py')
+SOURCE = $(TARGET) $(shell find tulip -name '*.py')
 
 $(DIST_BIN): $(PYPY_TARGET) $(SOURCE)
 	mkdir -p $(dir $@)
-	$(RPYTHON_EXEC) target.py && mv target-c $@
+	$(RPYTHON_EXEC) $(TARGET) && mv target-c $@
 
 .PHONY: build
 build: $(DIST_BIN)

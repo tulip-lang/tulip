@@ -2,7 +2,7 @@ from rpython.rlib.rarithmetic import r_uint
 from rpython.rlib.rstring import UnicodeBuilder
 
 class ParseState(object):
-    def __init__(self, reader):
+    def __init__(self, reader, debug=False):
         self.reader = reader
         self.index = 0
         self.error_index = -1
@@ -13,6 +13,7 @@ class ParseState(object):
         self.behind = []
         self.lineno = 0
         self.colno = 0
+        self.debug = debug
 
     def dump(self):
         # this is dumb
@@ -64,35 +65,29 @@ class ParseState(object):
         else:
             self.colno -= 1
 
-    def advance1(self):
+    def advance(self):
         self.advance_pos()
         if len(self.bt_marks) > 0: self.behind.append(self.head)
         if len(self.ahead) == 0:
             self.head = self.reader.next()
         else:
             self.head = self.ahead.pop()
-        print u"adv: %s" % self.dump()
 
-    def rewind1(self):
+        if self.debug:
+            print u"adv: %s" % self.dump()
+
+    def rewind(self):
         assert len(self.behind) > 0, "can't rewind anymore!"
         self.ahead.append(self.head)
         self.head = self.behind.pop()
         self.rewind_pos()
-        print u"rew: %s" % self.dump()
-
-    def advance(self, steps=1):
-        assert steps > 0, "can't advance %d times" % steps
-        for _ in range(steps):
-            self.advance1()
-
-    def rewind(self, steps=1):
-        assert steps >= 0, "can't rewind %d times" % steps
-        for _ in range(steps):
-            self.rewind1()
+        if self.debug:
+            print u"rew: %s" % self.dump()
 
     def rewind_to(self, idx):
-        steps = self.index - idx
-        self.rewind(steps)
+        assert idx <= self.index, "can't rewind forwards"
+        while idx < self.index:
+            self.rewind()
 
 class Box(object):
     class Base(object):
@@ -148,19 +143,22 @@ class ParseError(Exception):
         self.colno = colno
         self.messages = messages
 
-    def __str__(self):
+    def dump(self):
         return u"parse error at %d:%d - expected one of %s" % \
-          (self.lineno, self.colno, ", ".join(self.messages))
+          (self.lineno, self.colno, u", ".join(self.messages))
+
+    def __str__(self):
+        return self.dump()
 
 class Parser(object):
     def perform(self, st):
         assert False, "abstract"
 
-    def parse(self, reader):
+    def parse(self, reader, debug=False):
         reader.setup()
         try:
-            state = ParseState(reader)
-            state.advance1()
+            state = ParseState(reader, debug=debug)
+            state.advance()
             result = self.perform(state)
             if result is _failure:
                 raise ParseError(state.lineno, state.colno, state.error_messages)
@@ -368,7 +366,7 @@ class string(Parser):
     def perform(self, st):
         for i in range(0, len(self.string)):
             if st.head == self.string[i]:
-                st.advance1()
+                st.advance()
             else:
                 st.error(self.string)
                 return _failure
@@ -382,7 +380,7 @@ class Test(Parser):
     def perform(self, st):
         head = st.head
         if self.pred(head):
-            st.advance1()
+            st.advance()
             return Success(Box.String(head))
         else:
             st.error(u'predicate')
@@ -405,14 +403,7 @@ def one_of(string):
 def none_of(string):
     return Test(lambda x: x is not None and not x in string)
 
-class Eof(Parser):
-    def perform(self, st):
-        if st.head is None:
-            return Success(None)
-        else:
-            return _failure
-
-eof = Eof()
+eof = Test(lambda x: x is None)
 
 class Reader(object):
     def setup(self):

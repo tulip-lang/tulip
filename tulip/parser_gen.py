@@ -1,8 +1,10 @@
 from rpython.rlib.rarithmetic import r_uint
 from rpython.rlib.rstring import UnicodeBuilder
+from rpython.rlib.streamio import open_file_as_stream, DecodingInputFilter
+from tulip.debug import debug
 
 class ParseState(object):
-    def __init__(self, reader, debug=False):
+    def __init__(self, reader):
         self.reader = reader
         self.index = 0
         self.error_index = -1
@@ -13,7 +15,7 @@ class ParseState(object):
         self.behind = []
         self.lineno = 0
         self.colno = 0
-        self.debug = debug
+        self.debug = debug.check(u'parser')
 
     def dump(self):
         # this is dumb
@@ -154,10 +156,10 @@ class Parser(object):
     def perform(self, st):
         assert False, "abstract"
 
-    def parse(self, reader, debug=False):
+    def parse(self, reader):
         reader.setup()
         try:
-            state = ParseState(reader, debug=debug)
+            state = ParseState(reader)
             state.advance()
             result = self.perform(state)
             if result is _failure:
@@ -415,32 +417,30 @@ class Reader(object):
     def teardown(self):
         pass
 
+# TODO: find a better way
+from tulip.libedit import unicode_from_utf8
 class FileReader(Reader):
-    def __init__(self, fname, bufsize=20):
+    def __init__(self, fname):
         self.fname = fname
-        self.fdesc = None
-        self.isEof = False
-        self.buf = u''
-        self.bufIndex = r_uint(0)
+        self.stream = None
 
     def setup(self):
-        self.fdesc = open(self.fname)
-        self.fdesc.encoding = 'UTF-8'
+        self.stream = open_file_as_stream(self.fname)
 
     def next(self):
-        if self.bufIndex >= len(self.buf):
-            if self.isEof:
-                return None
-            else:
-                self.buf = unicode(self.fdesc.read(self.bufsize))
-                self.bufIndex = 0
+        data = ''
+        for i in range(0, 9):
+            try:
+                data += self.stream.read(1)
+                return unicode_from_utf8(data)
+            except UnicodeDecodeError as e:
+                pass
 
-        out = self.buf[self.bufIndex]
-        self.bufIndex += 1
-        return out
+        data += self.stream.read(1)
+        return unicode_from_utf8(data)
 
     def teardown(self):
-        self.fdesc.close()
+        self.stream.close()
 
 class StringReader(Reader):
     def __init__(self, string):

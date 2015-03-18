@@ -65,7 +65,7 @@ class Lazy(Expr):
         return u"~%s" % self.expr.dump_nested()
 
 class Let(Expr):
-    class Clause(object):
+    class Clause(Syntax):
         def __init__(self, name, patterns, expr):
             self.name = name
             self.patterns = patterns

@@ -1,30 +1,39 @@
 from tulip.symbol import Symbol, SymbolTable
 from tulip.syntax import *
 from tulip.parser import parser
-from tulip.parser_gen import StringReader, ParseError
+from tulip.parser_gen import StringReader, FileReader, ParseError
 from sys import stdin
 from tulip.libedit import readline
-from os import environ
+from tulip.debug import debug
 
 def entry_point(argv):
-    try:
-        DEBUG = unicode(environ['TULIP_DEBUG']).split(u',')
-    except KeyError:
-        DEBUG = []
+    if len(argv) >= 1:
+        return run_file(argv[0])
+    elif stdin.isatty:
+        return run_repl()
+    else:
+        assert False, u'TODO: actually implement an arg parser'
 
-    debug_parser = (u'parser' in DEBUG)
-
+def run_repl():
     while True:
         try:
             line = readline(': ')
-            print '=', parser.parse(StringReader(line), debug=debug_parser).dump()
+            print '=', parser.parse(StringReader(line)).dump()
         except EOFError:
             break
         except ParseError as e:
             print e.dump()
 
-
     return 0
+
+def run_file(fname):
+    reader = FileReader(fname)
+    try:
+        print parser.parse(reader).dump()
+        return 0
+    except ParseError as e:
+        print e.dump()
+        return 1
 
 def target(*args):
     return (entry_point, None)

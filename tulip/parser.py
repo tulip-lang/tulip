@@ -41,6 +41,8 @@ DOLLAR = lexeme(string('$'))
 TAGGED = lexeme(string('.').then(IDENT))
 CHECK  = lexeme(string('%').then(IDENT))
 RARROW = lineme(string('=>'))
+PLUS   = lexeme(string('+'))
+EQUAL  = lexeme(string('='))
 
 @generate('atom')
 def atom(gen):
@@ -49,7 +51,10 @@ def atom(gen):
 @generate('apply')
 def apply(gen):
     atoms = gen.parse(atom.many1()).get_list()
-    return ASTBox(Apply([a.get_ast() for a in atoms]))
+    if len(atoms) == 1:
+        return atoms[0]
+    else:
+        return ASTBox(Apply([a.get_ast() for a in atoms]))
 
 @generate('chain')
 def chain(gen):
@@ -57,6 +62,10 @@ def chain(gen):
     gen.parse(LINES)
     rest = gen.parse(RANGLE.then(apply).many()).get_list()
     gen.parse(LINES)
+
+    if len(rest) == 0:
+        return first
+
     chain_size = len(rest) + 1
     out = [None] * chain_size
     out[0] = first.get_ast()
@@ -64,6 +73,10 @@ def chain(gen):
         out[i+1] = rest[i].get_ast()
 
     return ASTBox(Chain(out))
+
+@generate
+def expr(gen):
+    return gen.parse(let)
 
 @generate('pattern')
 def pattern(gen):
@@ -84,7 +97,7 @@ named_pattern = CHECK.map(lambda s: ASTBox(NamedPat(sym(s.get_string()))))
 
 var = IDENT.map(lambda s: ASTBox(Var(sym(s.get_string()))))
 number = NUMBER.map(lambda s: ASTBox(Int(int(s.get_string()))))
-paren = LPAREN.then(chain).skip(RPAREN)
+paren = LPAREN.then(expr).skip(RPAREN)
 autovar = DOLLAR.map(lambda _: ASTBox(Autovar()))
 tag = TAGGED.map(lambda s: ASTBox(Tag(sym(s.get_string()))))
 lam_start = LBRACE
@@ -95,12 +108,31 @@ def _lam_map(args):
     return ASTBox(Lam([clause]))
 
 # TODO: multiple clauses
-lam_end = seq(pattern.skip(seq(LINES, RARROW)), chain)\
+lam_end = seq(pattern.skip(seq(LINES, RARROW)), expr)\
             .skip(seq(RBRACE, LINES))\
             .map(_lam_map)
 
-autolam_end = chain.skip(RBRACE).map(lambda c: ASTBox(Autolam(c.get_ast())))
+autolam_end = expr.skip(RBRACE).map(lambda c: ASTBox(Autolam(c.get_ast())))
 
 lam = lam_start.then(alt(lam_end.backtracking(), autolam_end))
 
-parser = LINES.then(chain)
+@generate
+def let_clause(gen):
+    gen.parse(PLUS)
+    name = gen.parse(IDENT).get_string()
+    args = [a.get_ast() for a in gen.parse(pattern.many()).get_list()]
+    gen.parse(EQUAL)
+    body = gen.parse(expr).get_ast()
+    return ASTBox(Let.Clause(sym(name), args, body))
+
+@generate
+def let(gen):
+    clauses = [c.get_ast() for c in gen.parse(let_clause.many()).get_list()]
+    body = gen.parse(chain)
+
+    if len(clauses) == 0:
+        return body
+    else:
+        return ASTBox(Let(clauses, body))
+
+parser = LINES.then(expr)

@@ -412,7 +412,7 @@ class Reader(object):
         pass
 
     def next(self):
-        raise "abstract"
+        assert False, 'abstract!'
 
     def teardown(self):
         pass

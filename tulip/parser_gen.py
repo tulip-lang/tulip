@@ -417,8 +417,6 @@ class Reader(object):
     def teardown(self):
         pass
 
-# TODO: find a better way
-from tulip.libedit import unicode_from_utf8
 class FileReader(Reader):
     def __init__(self, fname):
         self.fname = fname
@@ -429,15 +427,15 @@ class FileReader(Reader):
 
     def next(self):
         data = ''
-        for i in range(0, 9):
+        for _ in range(0, 9):
             try:
                 data += self.stream.read(1)
-                return unicode_from_utf8(data)
+                return data.decode('utf-8')
             except UnicodeDecodeError as e:
                 pass
 
         data += self.stream.read(1)
-        return unicode_from_utf8(data)
+        return data.decode('utf-8')
 
     def teardown(self):
         self.stream.close()

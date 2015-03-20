@@ -49,7 +49,7 @@ run: $(DIST_BIN)
 
 .PHONY: run-interpreted
 run-interpreted: $(PYPY_TARGET)
-	$(PYTHON_EXEC) $(TARGET)
+	$(PYTHON_EXEC) $(TARGET) $(ARGS)
 
 
 .PHONY: clean

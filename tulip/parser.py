@@ -76,7 +76,13 @@ def chain(gen):
 
 @generate
 def expr(gen):
-    return gen.parse(let)
+    clauses = [c.get_ast() for c in gen.parse(let_clause.many()).get_list()]
+    body = gen.parse(chain)
+
+    if len(clauses) == 0:
+        return body
+    else:
+        return ASTBox(Let(clauses, body))
 
 @generate('pattern')
 def pattern(gen):
@@ -124,15 +130,5 @@ def let_clause(gen):
     gen.parse(EQUAL)
     body = gen.parse(expr).get_ast()
     return ASTBox(Let.Clause(sym(name), args, body))
-
-@generate
-def let(gen):
-    clauses = [c.get_ast() for c in gen.parse(let_clause.many()).get_list()]
-    body = gen.parse(chain)
-
-    if len(clauses) == 0:
-        return body
-    else:
-        return ASTBox(Let(clauses, body))
 
 parser = LINES.then(expr)

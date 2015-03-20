@@ -5,10 +5,11 @@ from tulip.parser_gen import StringReader, FileReader, ParseError
 from sys import stdin
 from tulip.libedit import readline
 from tulip.debug import debug
+from rpython.rlib.objectmodel import we_are_translated
 
 def entry_point(argv):
-    if len(argv) >= 1:
-        return run_file(argv[0])
+    if len(argv) >= 2:
+        return run_file(argv[1])
     elif stdin.isatty:
         return run_repl()
     else:

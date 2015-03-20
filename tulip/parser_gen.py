@@ -405,7 +405,15 @@ def one_of(string):
 def none_of(string):
     return Test(lambda x: x is not None and not x in string)
 
-eof = Test(lambda x: x is None)
+class Eof(Parser):
+    def perform(self, st):
+        if st.head is None:
+            return Success(None)
+        else:
+            st.error('eof')
+            return _failure
+
+eof = Eof()
 
 class Reader(object):
     def setup(self):
@@ -421,21 +429,33 @@ class FileReader(Reader):
     def __init__(self, fname):
         self.fname = fname
         self.stream = None
+        self.done = False
 
     def setup(self):
         self.stream = open_file_as_stream(self.fname)
 
     def next(self):
+        if self.done:
+            return None
+
         data = ''
         for _ in range(0, 9):
             try:
                 data += self.stream.read(1)
-                return data.decode('utf-8')
+                return self.decode(data)
             except UnicodeDecodeError as e:
                 pass
 
         data += self.stream.read(1)
-        return data.decode('utf-8')
+        return self.decode(data)
+
+    def decode(self, data):
+        decoded = data.decode('utf-8')
+        if len(decoded) == 0:
+            self.done = True
+            return None
+        else:
+            return decoded
 
     def teardown(self):
         self.stream.close()

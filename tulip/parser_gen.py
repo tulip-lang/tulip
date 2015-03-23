@@ -201,6 +201,9 @@ class Parser(object):
     def backtracking(self):
         return Backtracking(self)
 
+    def opt(self):
+        return Opt(self)
+
 def _skip_map(box):
     return box.get_list()[0]
 
@@ -244,6 +247,17 @@ class Generated(Parser):
 
     def perform(self, st):
         return Generated.ParseGen(st).run(self.gen_fn)
+
+class Opt(Parser):
+    def __init__(self, parser):
+        self.parser = parser
+
+    def perform(self, st):
+        result = self.parser.perform(st)
+        if result is _failure:
+            return Success(None)
+        else:
+            return result
 
 class Desc(Parser):
     def __init__(self, parser, desc):

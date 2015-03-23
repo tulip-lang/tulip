@@ -44,6 +44,8 @@ RARROW = lineme(string('=>'))
 PLUS   = lexeme(string('+'))
 EQUAL  = lexeme(string('='))
 
+MODULE = lexeme(string('@module'))
+
 @generate('atom')
 def atom(gen):
     return gen.parse(alt(var, number, paren, lam, tag, autovar))
@@ -75,12 +77,21 @@ def chain(gen):
     return ASTBox(Chain(out))
 
 @generate
+def definition(gen):
+    gen.parse(PLUS)
+    name = gen.parse(IDENT).get_string()
+    args = [a.get_ast() for a in gen.parse(pattern.many()).get_list()]
+    gen.parse(EQUAL)
+    body = gen.parse(expr).get_ast()
+    return ASTBox(Definition(sym(name), args, body))
+
+@generate
 def expr(gen):
-    clauses = [c.get_ast() for c in gen.parse(let_clause.many()).get_list()]
-    body = gen.parse(chain)
+    clauses = [c.get_ast() for c in gen.parse(definition.many()).get_list()]
+    body = gen.parse(chain).get_ast()
 
     if len(clauses) == 0:
-        return body
+        return ASTBox(body)
     else:
         return ASTBox(Let(clauses, body))
 
@@ -114,21 +125,49 @@ def _lam_map(args):
     return ASTBox(Lam([clause]))
 
 # TODO: multiple clauses
-lam_end = seq(pattern.skip(seq(LINES, RARROW)), expr)\
-            .skip(seq(RBRACE, LINES))\
-            .map(_lam_map)
+@generate
+def lam_clause(gen):
+    pat = gen.parse(pattern).get_ast()
+    gen.parse(LINES)
+    gen.parse(RARROW)
+    body = gen.parse(expr).get_ast()
+    return ASTBox(Lam.Clause(pat, body))
+
+@generate
+def lam_end(gen):
+    clauses = gen.parse(lam_clause.many()).get_list()
+    clauses = [c.get_ast() for c in clauses]
+    gen.parse(RBRACE)
+
+    return ASTBox(Lam(clauses))
 
 autolam_end = expr.skip(RBRACE).map(lambda c: ASTBox(Autolam(c.get_ast())))
 
 lam = lam_start.then(alt(lam_end.backtracking(), autolam_end))
 
 @generate
-def let_clause(gen):
-    gen.parse(PLUS)
-    name = gen.parse(IDENT).get_string()
-    args = [a.get_ast() for a in gen.parse(pattern.many()).get_list()]
-    gen.parse(EQUAL)
-    body = gen.parse(expr).get_ast()
-    return ASTBox(Let.Clause(sym(name), args, body))
+def module_item(gen):
+    return gen.parse(alt(definition, module_decl))
 
-parser = LINES.then(expr)
+@generate
+def module_decl(gen):
+    gen.parse(MODULE)
+    name = sym(gen.parse(IDENT).get_string())
+    pats = [p.get_ast() for p in gen.parse(pattern.many()).get_list()]
+    gen.parse(EQUAL)
+    gen.parse(LBRACE)
+    items = [i.get_ast() for i in gen.parse(module_item.many()).get_list()]
+    gen.parse(RBRACE)
+    return ASTBox(Module(name, pats, items))
+
+@generate
+def bare_module(gen):
+    gen.parse(MODULE)
+    name = sym(gen.parse(IDENT).get_string())
+    pats = [p.get_ast() for p in gen.parse(pattern.many()).get_list()]
+    gen.parse(LINES)
+    items = [i.get_ast() for i in gen.parse(module_item.many()).get_list()]
+    return ASTBox(Module(name, pats, items))
+
+expr_parser = LINES.then(expr)
+module_parser = LINES.then(bare_module)

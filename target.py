@@ -1,6 +1,6 @@
 from tulip.symbol import Symbol, SymbolTable
 from tulip.syntax import *
-from tulip.parser import parser
+from tulip.parser import expr_parser, module_parser
 from tulip.parser_gen import StringReader, FileReader, ParseError
 from sys import stdin
 from tulip.libedit import readline
@@ -16,10 +16,12 @@ def entry_point(argv):
         assert False, u'TODO: actually implement an arg parser'
 
 def run_repl():
+    print_logo()
+
     while True:
         try:
             line = readline(': ')
-            print '=', parser.parse(StringReader(line)).dump()
+            print '=', expr_parser.parse(StringReader(line)).dump()
         except EOFError:
             break
         except ParseError as e:
@@ -27,10 +29,17 @@ def run_repl():
 
     return 0
 
+def print_logo():
+    print
+    print "    ) ("
+    print "   (/ _) tulip"
+    print "     |/"
+    print
+
 def run_file(fname):
     reader = FileReader(fname)
     try:
-        print parser.parse(reader).dump()
+        print module_parser.parse(reader).dump()
         return 0
     except ParseError as e:
         print e.dump()

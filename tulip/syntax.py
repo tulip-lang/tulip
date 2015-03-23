@@ -65,18 +65,19 @@ class Lazy(Expr):
         return u"~%s" % self.expr.dump_nested()
 
 class Let(Expr):
-    class Clause(Syntax):
-        def __init__(self, name, patterns, expr):
-            self.name = name
-            self.patterns = patterns
-            self.expr = expr
-
-    def __init__(self, clauses, expr):
-        self.clauses = clauses
+    def __init__(self, definitions, expr):
+        self.definitions = definitions
         self.expr = expr
 
+    def dump(self):
+        clauses_ = u'; '.join([c.dump() for c in self.definitions])
+        return u'%s; %s' % (clauses_, self.expr.dump())
+
+    def dump_nested(self):
+        return u'(%s)' % self.dump()
+
 class Lam(Expr):
-    class Clause(object):
+    class Clause(Syntax):
         def __init__(self, pattern, body):
             self.pattern = pattern
             self.body = body
@@ -118,8 +119,11 @@ class TagPat(Pattern):
         self.patterns = patterns
 
     def dump(self):
-        patterns = u" ".join([e.dump_nested() for e in self.patterns])
-        return u'.%s %s' % (self.symbol.name, patterns)
+        if len(self.patterns) > 0:
+            patterns = u" ".join([e.dump_nested() for e in self.patterns])
+            return u'.%s %s' % (self.symbol.name, patterns)
+        else:
+            return u'.%s' % self.symbol.name
 
     def dump_nested(self):
         return u'(%s)' % self.dump()
@@ -130,3 +134,40 @@ class NamedPat(Pattern):
 
     def dump(self):
         return u"%%%s" % self.symbol.name
+
+class Definition(ModuleItem):
+    def __init__(self, symbol, patterns, body):
+        assert isinstance(body, Expr)
+        self.symbol = symbol
+        self.patterns = patterns
+        self.body = body
+
+    def __init__(self, symbol, patterns, expr):
+        self.symbol = symbol
+        self.patterns = patterns
+        self.expr = expr
+
+    def dump(self):
+        name_ = self.symbol.name
+        expr_ = self.expr.dump()
+        if len(self.patterns) == 0:
+            return u'+ %s = %s' % (name_, expr_)
+        else:
+            patterns_ = u' '.join([p.dump_nested() for p in self.patterns])
+            return u'+ %s %s = %s' % (name_, patterns_, expr_)
+
+class Module(ModuleItem):
+    def __init__(self, name, patterns, items):
+        self.name = name
+        self.patterns = patterns
+        self.items = items
+
+    def dump(self):
+        if len(self.patterns) > 0:
+            patterns_ = u' '.join([p.dump_nested() for p in self.patterns])
+            heading = u'%s %s' % (self.name.name, patterns_)
+        else:
+            heading = u'%s' % self.name.name
+
+        body = u'; '.join([i.dump() for i in self.items])
+        return u'@module %s = [ %s ]' % (heading, body)

@@ -7,20 +7,26 @@ from tulip.libedit import readline
 from tulip.debug import debug
 from rpython.rlib.objectmodel import we_are_translated
 from tulip.lexer import Lexer, Token, LexError
-from tulip.reader import StringReader
+from tulip.reader import StringReader, FileReader
 
 def entry_point(argv):
-    lexer = Lexer(StringReader(unicode(argv[1])))
+    if len(argv) >= 2:
+        return run_file(argv[1])
+    elif stdin.isatty:
+        return run_repl()
+    else:
+        assert False, u'TODO: actually implement an arg parser'
+
+def lex_to_stdout(reader):
+    lexer = Lexer(reader)
     lexer.setup()
+
     try:
         while True:
-            (token, value) = lexer.next()
-            if value is None:
-                print Token.TOKENS[token]
-            else:
-                print u'%s(%s)' % (Token.TOKENS[token], value)
+            token = lexer.next()
+            print token.dump()
 
-            if token is Token.EOF:
+            if token.is_eof():
                 break
 
         return 0
@@ -28,12 +34,8 @@ def entry_point(argv):
         print u'error: %d:%d' % (e.lexer.line, e.lexer.col)
         print u'head: <%s>' % e.lexer.head
         return 1
-    # if len(argv) >= 2:
-    #     return run_file(argv[1])
-    # elif stdin.isatty:
-    #     return run_repl()
-    # else:
-    #     assert False, u'TODO: actually implement an arg parser'
+    finally:
+        lexer.teardown()
 
 def run_repl():
     print_logo()
@@ -41,11 +43,9 @@ def run_repl():
     while True:
         try:
             line = readline(': ')
-            print '=', expr_parser.parse(StringReader(line)).dump()
+            lex_to_stdout(StringReader(u'<repl>', line))
         except EOFError:
             break
-        except ParseError as e:
-            print e.dump()
 
     return 0
 
@@ -58,12 +58,7 @@ def print_logo():
 
 def run_file(fname):
     reader = FileReader(fname)
-    try:
-        print module_parser.parse(reader).dump()
-        return 0
-    except ParseError as e:
-        print e.dump()
-        return 1
+    return lex_to_stdout(reader)
 
 def target(*args):
     return (entry_point, None)

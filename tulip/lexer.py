@@ -1,4 +1,5 @@
 from rpython.rlib.rarithmetic import r_uint
+from tulip.debug import debug
 
 class Token:
     TOKENS = [
@@ -16,9 +17,14 @@ class Token:
       u"PLUS",
       u"TILDE",
       u"BANG",
+      u"PIPE",
+      u"COLON",
+      u"STAR",
 
+      u"AMP",
       u"CHECK",
       u"TAGGED",
+      u"SLASHED",
       u"ANNOT",
       u"SLASH",
       u"INT",
@@ -26,6 +32,42 @@ class Token:
 
       u"EOF"
     ]
+
+    def __init__(self, tokid, value, loc_range):
+        self.tokid = tokid
+        self.value = value
+        self.loc_range = loc_range
+
+    def dump(self):
+        if self.value is None:
+            return u'%s%s' % (self.loc_range.dump(), Token.TOKENS[self.tokid])
+        else:
+            return u'%s%s(%s)' % (self.loc_range.dump(), Token.TOKENS[self.tokid], self.value)
+
+    def is_eof(self):
+        return self.tokid == Token.EOF
+
+
+class LocRange(object):
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+    def dump(self):
+        return u'%s:<%s,%s>' % (self.start.input, self.start.dump(), self.end.dump())
+
+class Location(object):
+    def __init__(self, input, index, line, col):
+        self.index = index
+        self.line = line
+        self.col = col
+        self.input = input
+
+    def equal(self, other):
+        return self.input == other.input and self.index == other.index
+
+    def dump(self):
+        return u'%d:%d' % (self.line, self.col)
 
 
 for i in range(len(Token.TOKENS)):
@@ -39,7 +81,7 @@ class Lexer(object):
     def __init__(self, reader):
         self.reader = reader
         self.index = r_uint(0)
-        self.line = r_uint(0)
+        self.line = r_uint(1)
         self.col = r_uint(0)
         self.head = None
         self.tape = None
@@ -48,12 +90,19 @@ class Lexer(object):
 
     def setup(self):
         assert self.head is None
+        self.reader.setup()
         self.advance()
         self.uninitialized = False
+        self.skip_lines()
+        self.reset()
+
+    def teardown(self):
+        self.reader.teardown()
 
     def reset(self):
         self.recording = False
         self.tape = None
+        self._final_loc = None
 
     def recorded_value(self):
         if self.tape is None:
@@ -61,23 +110,26 @@ class Lexer(object):
         else:
             return u''.join(self.tape)
 
+    def current_location(self):
+        return Location(self.reader.input_name(), self.index, self.line, self.col)
+
     def advance(self):
-        assert self.uninitialized or self.head is not None
+        assert self.uninitialized or self.head is not None, u"can't advance past the end!"
+
+        self.index += 1
+        if self.head == u'\n':
+            self.line += 1
+            self.col = r_uint(0)
+        else:
+            self.col += 1
 
         if self.recording:
             self.tape.append(self.head)
 
         self.head = self.reader.next()
-        print u'advance<%s>' % self.head
 
-        self.index += 1
-        if self.head == u'\n':
-            print 'line advance'
-            self.line += 1
-            self.col = r_uint(0)
-        else:
-            print u'column advance on <%s>' % self.head
-            self.col += 1
+        if debug.check('lexer'):
+            print u'advance<%s>' % self.head
 
     def record(self):
         self.recording = True
@@ -85,27 +137,42 @@ class Lexer(object):
 
     def end_record(self):
         self.recording = False
+        self.end_loc()
+
+    def end_loc(self):
+        self._final_loc = self.current_location()
+
+    def final_loc(self):
+        return self._final_loc or self.current_location()
 
     def next(self):
         self.reset()
+        start = self.current_location()
         token = self.process_root()
         value = self.recorded_value()
-        return (token, value)
+        end = self.final_loc()
+        assert (token == Token.EOF or self.index != start.index), u'must advance the stream!'
+        return Token(token, value, LocRange(start, end))
 
     def skip_ws(self):
+        self.end_loc()
+        self._advance_through_ws()
+
+    def _advance_through_ws(self):
         while is_ws(self.head):
             self.advance()
 
     def skip_lines(self):
+        self.end_loc()
         while True:
-            self.skip_ws()
+            self._advance_through_ws()
             if self.head == u'#':
                 while self.head != u'\n' and self.head is not None:
                     self.advance()
-            elif self.head in [u'\r', u'\n']:
+            elif self.head in [u'\r', u'\n', u';']:
                 self.advance()
             else:
-                self.skip_ws()
+                self._advance_through_ws()
                 break
 
     def record_ident(self):
@@ -142,7 +209,7 @@ class Lexer(object):
         if self.head == u']':
             self.advance()
             self.skip_lines()
-            return Token.LBRACE
+            return Token.RBRACE
 
         if self.head == u'=':
             self.advance()
@@ -169,6 +236,21 @@ class Lexer(object):
             self.skip_lines()
             return Token.GT
 
+        if self.head == u'|':
+            self.advance()
+            self.skip_lines()
+            return Token.PIPE
+
+        if self.head == u':':
+            self.advance()
+            self.skip_lines()
+            return Token.COLON
+
+        if self.head == u'*':
+            self.advance()
+            self.skip_ws()
+            return Token.STAR
+
         if self.head == u'%':
             self.advance()
             self.record_ident()
@@ -180,6 +262,22 @@ class Lexer(object):
             self.record_ident()
             self.skip_ws()
             return Token.ANNOT
+
+        if self.head == u'&':
+            self.advance()
+            self.record_ident()
+            self.skip_ws()
+            return Token.AMP
+
+        if self.head == u'/':
+            self.advance()
+            if is_alpha(self.head):
+                self.record_ident()
+                self.skip_ws()
+                return Token.SLASHED
+            else:
+                self.tape = []
+                return Token.SLASHED
 
         if self.head == u'.':
             self.advance()

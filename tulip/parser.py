@@ -1,5 +1,11 @@
 from tulip.syntax import *
-from tulip.parser_gen import string, generate, char_range, one_of, none_of, seq, alt, Box
+from tulip.parser_gen import tok, generate, seq, alt, Box
+from tulip.lexer import Token
+from tulip.symbol import sym
+
+# register all the token parsers
+for tokname in Token.TOKENS:
+    globals()[tokname] = tok(getattr(Token, tokname))
 
 class ASTBox(Box.Base):
     def __init__(self, syntax):
@@ -11,40 +17,6 @@ class ASTBox(Box.Base):
 
     def dump(self):
         return u"<Box.AST (%s)>" % self.syntax.dump()
-
-whitespace = one_of(u" \t").many()
-nl = alt(string(u"\n"), string(u"\r\n"))
-comment = seq(string(u'#'), none_of(u"\n").many(), nl)
-LINES = seq(alt(nl, comment, string(u";")).many(), whitespace)
-
-lexeme = lambda p: p.skip(whitespace)
-lineme = lambda p: p.skip(LINES)
-
-digit = char_range(u'0', u'9')
-ident_start = char_range(u'a', u'z')
-ident_ch = alt(char_range(u'a', u'z'), one_of(u'-_'), digit)
-
-@generate
-def ident(gen):
-    start = gen.parse(ident_start).get_string()
-    rest = gen.parse(ident_ch.scan()).get_string()
-    return Box.String(start + rest)
-
-NUMBER = lexeme(digit.scan1()).desc(u'number')
-IDENT =  lexeme(ident).desc(u'ident')
-RANGLE = lineme(string('>'))
-LPAREN = lineme(string('('))
-RPAREN = lexeme(string(')'))
-LBRACE = lineme(string('['))
-RBRACE = lineme(string(']'))
-DOLLAR = lexeme(string('$'))
-TAGGED = lexeme(string('.').then(IDENT))
-CHECK  = lexeme(string('%').then(IDENT))
-RARROW = lineme(string('=>'))
-PLUS   = lexeme(string('+'))
-EQUAL  = lexeme(string('='))
-
-MODULE = lexeme(string('@module'))
 
 @generate('atom')
 def atom(gen):
@@ -60,10 +32,10 @@ def apply(gen):
 
 @generate('chain')
 def chain(gen):
-    first = gen.parse(apply)
-    gen.parse(LINES)
-    rest = gen.parse(RANGLE.then(apply).many()).get_list()
-    gen.parse(LINES)
+    component = apply.skip(NL.opt())
+    first = gen.parse(component)
+    rest = gen.parse(GT.then(component).many()).get_list()
+    gen.parse(NL.opt())
 
     if len(rest) == 0:
         return first
@@ -79,7 +51,7 @@ def chain(gen):
 @generate
 def definition(gen):
     gen.parse(PLUS)
-    name = gen.parse(IDENT).get_string()
+    name = gen.parse(NAME).get_token().value
     args = [a.get_ast() for a in gen.parse(pattern.many()).get_list()]
     gen.parse(EQUAL)
     body = gen.parse(expr).get_ast()
@@ -100,7 +72,7 @@ def pattern(gen):
     return gen.parse(alt(var_pattern, tag_pattern, named_pattern, paren_pattern))
 
 paren_pattern = LPAREN.then(pattern).skip(RPAREN)
-var_pattern = IDENT.map(lambda s: ASTBox(VarPat(sym(s.get_string()))))
+var_pattern = NAME.map(lambda s: ASTBox(VarPat(sym(s.get_token().value))))
 
 @generate
 def tag_pattern(gen):
@@ -112,11 +84,11 @@ def tag_pattern(gen):
 named_pattern = CHECK.map(lambda s: ASTBox(NamedPat(sym(s.get_string()))))
 
 
-var = IDENT.map(lambda s: ASTBox(Var(sym(s.get_string()))))
-number = NUMBER.map(lambda s: ASTBox(Int(int(s.get_string()))))
+var = NAME.map(lambda b: ASTBox(Var(sym(b.get_token().value))))
+number = INT.map(lambda b: ASTBox(Int(int(b.get_token().value))))
 paren = LPAREN.then(expr).skip(RPAREN)
 autovar = DOLLAR.map(lambda _: ASTBox(Autovar()))
-tag = TAGGED.map(lambda s: ASTBox(Tag(sym(s.get_string()))))
+tag = TAGGED.map(lambda s: ASTBox(Tag(sym(s.get_token().value))))
 lam_start = LBRACE
 
 def _lam_map(args):
@@ -128,7 +100,7 @@ def _lam_map(args):
 @generate
 def lam_clause(gen):
     pat = gen.parse(pattern).get_ast()
-    gen.parse(LINES)
+    gen.parse(NL.opt())
     gen.parse(RARROW)
     body = gen.parse(expr).get_ast()
     return ASTBox(Lam.Clause(pat, body))
@@ -161,13 +133,14 @@ def module_decl(gen):
     return ASTBox(Module(name, pats, items))
 
 @generate
-def bare_module(gen):
+def module(gen):
     gen.parse(MODULE)
     name = sym(gen.parse(IDENT).get_string())
     pats = [p.get_ast() for p in gen.parse(pattern.many()).get_list()]
-    gen.parse(LINES)
+    gen.parse(NL.opt())
     items = [i.get_ast() for i in gen.parse(module_item.many()).get_list()]
     return ASTBox(Module(name, pats, items))
 
-expr_parser = LINES.then(expr)
-module_parser = LINES.then(bare_module)
+def parse(reader):
+    lexer = Lexer(reader)
+    return expr.parse(lexer)

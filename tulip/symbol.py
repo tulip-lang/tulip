@@ -30,3 +30,9 @@ class SymbolTable(object):
             return self.reverse_table[id]
         else:
             raise KeyError(id)
+
+# TODO
+_global_table = SymbolTable()
+
+def sym(s):
+    return _global_table.sym(s)

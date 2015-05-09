@@ -1,7 +1,7 @@
 from tulip.symbol import Symbol, SymbolTable
 from tulip.syntax import *
-# from tulip.parser import expr_parser, module_parser
-# from tulip.parser_gen import StringReader, FileReader, ParseError
+import tulip.parser as parser
+from tulip.parser_gen import ParseError
 from sys import stdin
 from tulip.libedit import readline
 from tulip.debug import debug
@@ -43,7 +43,12 @@ def run_repl():
     while True:
         try:
             line = readline(': ')
-            lex_to_stdout(StringReader(u'<repl>', line))
+            print parser.expr.parse(Lexer(StringReader(u'<repl>', line))).dump()
+        except LexError as e:
+            print u'lex error: %d:%d' % (e.lexer.line, e.lexer.col)
+            print u'head: <%s>' % e.lexer.head
+        except ParseError as e:
+            print e.dump()
         except EOFError:
             break
 
@@ -51,14 +56,22 @@ def run_repl():
 
 def print_logo():
     print
-    print "    ) ("
-    print "   (/ _) tulip"
+    print "    )`("
+    print "   (   ) tulip"
     print "     |/"
     print
 
 def run_file(fname):
     reader = FileReader(fname)
-    return lex_to_stdout(reader)
+    try:
+        print parser.module.parse(Lexer(reader)).dump()
+    except LexError as e:
+        print u'lex error: %d:%d' % (e.lexer.line, e.lexer.col)
+        print u'head: <%s>' % e.lexer.head
+    except ParseError as e:
+        print u'parse error'
+
+    return 0
 
 def target(*args):
     return (entry_point, None)

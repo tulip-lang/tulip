@@ -38,6 +38,9 @@ class Token:
         self.value = value
         self.loc_range = loc_range
 
+    def is_before(self, other):
+        return self.loc_range.start.index < other.loc_range.start.index
+
     def dump(self):
         if self.value is None:
             return u'%s%s' % (self.loc_range.dump(), Token.TOKENS[self.tokid])

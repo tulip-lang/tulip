@@ -12,6 +12,9 @@ class Reader(object):
     def teardown(self):
         pass
 
+    def input_name(self):
+        assert False, 'abstract!'
+
 class FileReader(Reader):
     def __init__(self, fname):
         self.fname = fname
@@ -20,6 +23,9 @@ class FileReader(Reader):
 
     def setup(self):
         self.stream = open_file_as_stream(self.fname)
+
+    def input_name(self):
+        return unicode(self.fname)
 
     def next(self):
         if self.done:
@@ -48,9 +54,13 @@ class FileReader(Reader):
         self.stream.close()
 
 class StringReader(Reader):
-    def __init__(self, string):
+    def __init__(self, name, string):
+        self.name = name
         self.string = string
         self.index = r_uint(0)
+
+    def input_name(self):
+        return self.name
 
     def next(self):
         if self.index >= len(self.string):

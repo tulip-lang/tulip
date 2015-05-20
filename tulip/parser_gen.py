@@ -64,11 +64,15 @@ class ParseState(object):
     def dump(self):
         behind = [t.dump() for t in self.behind]
         ahead = [t.dump() for t in self.ahead]
+        if self.head is None:
+            head = u'None'
+        else:
+            head = self.head.dump()
         ahead.reverse()
         return u"(st %d <<%s>> %s <<%s>>)" % (
           self.index,
           u''.join(behind),
-          self.head and self.head.dump(),
+          head,
           u''.join(ahead)
         )
 
@@ -163,10 +167,13 @@ class Parser(object):
             if result is failure:
                 raise ParseError(state.error_token, state.error_messages)
             elif isinstance(result, Success):
+                print 'head:'
+                print state.head.dump()
                 if state.head.tokid is Token.EOF:
                     return result.box
                 else:
-                    raise ParseError(state.head, [u'EOF'])
+                    state.error(u'EOF')
+                    raise ParseError(state.error_token, state.error_messages)
 
             assert False, "impossible"
         finally:
@@ -239,6 +246,14 @@ class Generated(Parser):
 
     def perform(self, st):
         return Generated.ParseGen(st).run(self.gen_fn)
+
+def generate(desc_or_fn):
+    if isinstance(desc_or_fn, str):
+        def decorator(fn):
+            return Generated(fn).desc(desc_or_fn)
+        return decorator
+    else:
+        return Generated(desc_or_fn)
 
 class Opt(Parser):
     def __init__(self, parser):
@@ -356,18 +371,21 @@ class tok(Parser):
     def perform(self, st):
         head = st.head
         if head.tokid == self.tokid:
-            st.advance()
+            if head.tokid != Token.EOF:
+                st.advance()
             return Success(Box.Token(head))
         else:
             st.error(self.name)
             return failure
 
-def generate(desc_or_fn):
-    if isinstance(desc_or_fn, str):
-        def decorator(fn):
-            return Generated(fn).desc(desc_or_fn)
-        return decorator
-    else:
-        return Generated(desc_or_fn)
+class Any(Parser):
+    def perform(self, st):
+        head = st.head
+        if head.tokid == Token.EOF:
+            st.error(u'any token')
+            return failure
+        else:
+            st.advance()
+            return Success(Box.Token(head))
 
-eof = tok(Token.EOF)
+any = Any()

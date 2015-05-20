@@ -1,5 +1,5 @@
 from tulip.syntax import *
-from tulip.parser_gen import tok, generate, seq, alt, Box
+from tulip.parser_gen import tok, generate, seq, alt, Box, any
 from tulip.lexer import Token
 from tulip.symbol import sym
 
@@ -53,7 +53,7 @@ def definition(gen):
     gen.parse(PLUS)
     name = gen.parse(NAME).get_token().value
     args = [a.get_ast() for a in gen.parse(pattern.many()).get_list()]
-    gen.parse(EQUAL)
+    gen.parse(EQ)
     body = gen.parse(expr).get_ast()
     return ASTBox(Definition(sym(name), args, body))
 
@@ -76,20 +76,20 @@ var_pattern = NAME.map(lambda s: ASTBox(VarPat(sym(s.get_token().value))))
 
 @generate
 def tag_pattern(gen):
-    tag = gen.parse(TAGGED).get_string()
+    tag = gen.parse(TAGGED).get_token().value
     args = gen.parse(pattern.many()).get_list()
     pats = [p.get_ast() for p in args]
     return ASTBox(TagPat(sym(tag), pats))
 
-named_pattern = CHECK.map(lambda s: ASTBox(NamedPat(sym(s.get_string()))))
+named_pattern = CHECK.map(lambda s: ASTBox(NamedPat(sym(s.get_token().value))))
 
 
 var = NAME.map(lambda b: ASTBox(Var(sym(b.get_token().value))))
-number = INT.map(lambda b: ASTBox(Int(int(b.get_token().value))))
+number = INT.map(lambda b: ASTBox(Int(int(b.get_token().value or u''))))
 paren = LPAREN.then(expr).skip(RPAREN)
 autovar = DOLLAR.map(lambda _: ASTBox(Autovar()))
 tag = TAGGED.map(lambda s: ASTBox(Tag(sym(s.get_token().value))))
-lam_start = LBRACE
+lam_start = LBRACK
 
 def _lam_map(args):
     pat, body = args.get_list()
@@ -109,37 +109,49 @@ def lam_clause(gen):
 def lam_end(gen):
     clauses = gen.parse(lam_clause.many()).get_list()
     clauses = [c.get_ast() for c in clauses]
-    gen.parse(RBRACE)
+    gen.parse(RBRACK)
 
     return ASTBox(Lam(clauses))
 
-autolam_end = expr.skip(RBRACE).map(lambda c: ASTBox(Autolam(c.get_ast())))
+autolam_end = expr.skip(RBRACK).map(lambda c: ASTBox(Autolam(c.get_ast())))
 
 lam = lam_start.then(alt(lam_end.backtracking(), autolam_end))
 
 @generate
-def module_item(gen):
-    return gen.parse(alt(definition, module_decl))
+def balanced_braces(gen):
+    print u'balanced braces start'
+    count = 0
+    lexemes = []
+    while True:
+        lexemes.append(gen.parse(alt(any, EOF)))
+        tokid = lexemes[-1].get_token().tokid
+
+        if tokid == Token.LBRACK:
+            count += 1
+            print u'incr count to: %d' % count
+        elif tokid == Token.RBRACK:
+            if count <= 0:
+                gen.fail(u'balanced braces')
+            count -= 1
+            print u'decr count to: %d' % count
+        elif count == 0 and tokid in [Token.NL, Token.EOF]:
+            print u'balanced braces end'
+            return Box.List(lexemes)
 
 @generate
-def module_decl(gen):
-    gen.parse(MODULE)
-    name = sym(gen.parse(IDENT).get_string())
-    pats = [p.get_ast() for p in gen.parse(pattern.many()).get_list()]
-    gen.parse(EQUAL)
-    gen.parse(LBRACE)
-    items = [i.get_ast() for i in gen.parse(module_item.many()).get_list()]
-    gen.parse(RBRACE)
-    return ASTBox(Module(name, pats, items))
+def unparsed_annotation(gen):
+    name = gen.parse(ANNOT).get_token().value
+    lexemes = [l.get_token() for l in gen.parse(balanced_braces).get_list()]
+    return ASTBox(UnparsedAnnotation(name, lexemes))
+
+@generate
+def module_item(gen):
+    return gen.parse(alt(definition, unparsed_annotation))
 
 @generate
 def module(gen):
-    gen.parse(MODULE)
-    name = sym(gen.parse(IDENT).get_string())
-    pats = [p.get_ast() for p in gen.parse(pattern.many()).get_list()]
-    gen.parse(NL.opt())
     items = [i.get_ast() for i in gen.parse(module_item.many()).get_list()]
-    return ASTBox(Module(name, pats, items))
+    return ASTBox(UnparsedModule(items))
 
 def parse(reader):
     lexer = Lexer(reader)

@@ -171,3 +171,27 @@ class Module(ModuleItem):
 
         body = u'; '.join([i.dump() for i in self.items])
         return u'@module %s = [ %s ]' % (heading, body)
+
+class UnparsedAnnotation(ModuleItem):
+    def __init__(self, name, lexemes):
+        self.name = name
+        self.lexemes = lexemes
+
+    def dump(self):
+        return u'@%s <unparsed>' % self.name
+
+class UnparsedModule(ModuleItem):
+    def __init__(self, items):
+        self.items = items
+
+    def dump(self):
+        return u'<UnparsedModule [ %s ]>' % u'; '.join([i.dump() for i in self.items])
+
+class UnparsedMacro(Expr):
+    def __init__(self, name, lexemes):
+        self.name = name
+        self.lexemes = lexemes
+
+    def compile(self, context):
+        macro = context.lookup_macro(self.name)
+        macro.compile(self.lexemes, context)

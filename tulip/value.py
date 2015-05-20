@@ -20,14 +20,16 @@ class Func(Callable):
     def arity(self):
         return self._arity
 
-    def invoke(self, rt, argv):
-        frame = rt.make_frame(arity, argv)
-        rt.interpret(self.bytecode, frame)
+    def invoke(self, frame, argv):
+        frame = frame.rt.make_frame(self.bytecode, self.arity, argv)
+        frame.rt.push(self.bytecode, frame)
 
 class Tagged(Callable):
     def __init__(self, symbol, args):
         self.symbol = symbol
         self.args = args
+
+    def invoke(self, rt, argv):
 
 # TODO
 class Pattern(Value):

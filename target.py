@@ -6,7 +6,7 @@ from sys import stdin
 from tulip.libedit import readline
 from tulip.debug import debug
 from rpython.rlib.objectmodel import we_are_translated
-from tulip.lexer import Lexer, Token, LexError
+from tulip.lexer import ReaderLexer, Token, LexError
 from tulip.reader import StringReader, FileReader
 
 def entry_point(argv):
@@ -16,26 +16,6 @@ def entry_point(argv):
         return run_repl()
     else:
         assert False, u'TODO: actually implement an arg parser'
-
-def lex_to_stdout(reader):
-    lexer = Lexer(reader)
-    lexer.setup()
-
-    try:
-        while True:
-            token = lexer.next()
-            print token.dump()
-
-            if token.is_eof():
-                break
-
-        return 0
-    except LexError as e:
-        print u'error: %d:%d' % (e.lexer.line, e.lexer.col)
-        print u'head: <%s>' % e.lexer.head
-        return 1
-    finally:
-        lexer.teardown()
 
 def run_repl():
     print_logo()
@@ -56,9 +36,9 @@ def run_repl():
 
 def print_logo():
     print
-    print "    )`("
-    print "   (   ) tulip"
-    print "     |/"
+    print u"    )`("
+    print u"   (   ) tulip"
+    print u"     |/"
     print
 
 def run_file(fname):
@@ -69,7 +49,7 @@ def run_file(fname):
         print u'lex error: %d:%d' % (e.lexer.line, e.lexer.col)
         print u'head: <%s>' % e.lexer.head
     except ParseError as e:
-        print u'parse error'
+        print e.dump()
 
     return 0
 

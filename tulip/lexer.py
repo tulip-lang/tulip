@@ -6,8 +6,8 @@ class Token:
       u"LPAREN",
       u"RPAREN",
 
-      u"LBRACE",
-      u"RBRACE",
+      u"LBRACK",
+      u"RBRACK",
 
       u"GT",
       u"DOLLAR",
@@ -50,6 +50,8 @@ class Token:
     def is_eof(self):
         return self.tokid == Token.EOF
 
+for i in range(len(Token.TOKENS)):
+    setattr(Token, Token.TOKENS[i], r_uint(i))
 
 class LocRange(object):
     def __init__(self, start, end):
@@ -72,15 +74,30 @@ class Location(object):
     def dump(self):
         return u'%d:%d' % (self.line, self.col)
 
-
-for i in range(len(Token.TOKENS)):
-    setattr(Token, Token.TOKENS[i], r_uint(i))
-
 class LexError(StandardError):
     def __init__(self, lexer):
         self.lexer = lexer
 
 class Lexer(object):
+    def setup(self):
+        pass
+
+    def next(self):
+        assert False, u'abstract'
+
+    def teardown(self):
+        pass
+
+class ListLexer(Lexer)
+    def __init__(self, lexemes):
+        self.lexemes = lexemes
+        self.index = 0
+
+    def next(self):
+        self.index += 1
+        return self.lexemes[self.index - 1]
+
+class ReaderLexer(Lexer):
     def __init__(self, reader):
         self.reader = reader
         self.index = r_uint(0)
@@ -207,12 +224,12 @@ class Lexer(object):
         if self.head == u'[':
             self.advance()
             self.skip_lines()
-            return Token.LBRACE
+            return Token.LBRACK
 
         if self.head == u']':
             self.advance()
-            self.skip_lines()
-            return Token.RBRACE
+            self.skip_ws()
+            return Token.RBRACK
 
         if self.head == u'=':
             self.advance()

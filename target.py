@@ -23,7 +23,7 @@ def run_repl():
     while True:
         try:
             line = readline(': ')
-            print parser.expr.parse(Lexer(StringReader(u'<repl>', line))).dump()
+            print parser.expr.parse(ReaderLexer(StringReader(u'<repl>', line))).dump()
         except LexError as e:
             print u'lex error: %d:%d' % (e.lexer.line, e.lexer.col)
             print u'head: <%s>' % e.lexer.head
@@ -44,7 +44,7 @@ def print_logo():
 def run_file(fname):
     reader = FileReader(fname)
     try:
-        print parser.module.parse(Lexer(reader)).dump()
+        print parser.module.parse(ReaderLexer(reader)).get_ast().dump()
     except LexError as e:
         print u'lex error: %d:%d' % (e.lexer.line, e.lexer.col)
         print u'head: <%s>' % e.lexer.head

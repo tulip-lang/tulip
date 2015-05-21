@@ -88,7 +88,7 @@ class Lexer(object):
     def teardown(self):
         pass
 
-class ListLexer(Lexer)
+class ListLexer(Lexer):
     def __init__(self, lexemes):
         self.lexemes = lexemes
         self.index = 0

@@ -6,7 +6,19 @@
   |/
 ```
 
+[coc]: http://tinyurl.com/tulip-conduct "Code of Conduct"
+
 Tulip is a language! [Here is a slightly out-of-date description of it](http://www.jneen.net/posts/2015-03-01-tulip-language).
+
+## Why Tulip?
+
+* Repl-oriented to encourage linear thinking and composition
+* Lightweight tagging, pattern-matching, and open methods for easy, clear communication between parts of the runtime
+* First-class parameterized modules for simple, easy encapsulation
+* Flexible actor-based concurrency model with no shared state (lifted from Erlang, really)
+* A diverse core team, and a founder who is not cis, straight, or a man. Also a [real, enforced code of conduct][coc], and a pretty-flower aesthetic.
+
+For more details, please read the blog post linked above.
 
 ## Contributing
 

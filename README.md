@@ -23,7 +23,11 @@ Tulip is still very much in design mode, so the architecture is still being deci
 * Design of the packaging system
 * Implementation of the standard library (in tulip!)
 
-Here's a general sketch of the architecture:
+The implementation uses [rpython](https://rpython.readthedocs.org/), which is a subset of python. A few other resources for learning the general approach are:
+  * the pypy team's own [example interpreter](https://bitbucket.org/pypy/example-interpreter)
+  * [pixie](https://github.com/pixie-lang/pixie), a clojure-like language in rpython
+
+As for tulip itself, here's a general sketch of the architecture:
 
 * Parsing is three steps:
   - A hand-written lexer in `lexer.py` (an object with setup/next/teardown methods)

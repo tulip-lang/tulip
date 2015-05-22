@@ -1,0 +1,17 @@
+sleep t = receive [] -timeout=(t, [! .ok ])
+flush! = receive [ _ => flush! ] -timeout=(0, [! .ok ])
+
+pause-loop! = receive [
+  .hello => (
+    print 'hello
+    sleep 2
+    pause-loop!
+  )
+
+  .die => .ok
+]
+
+# repl
+: pid = spawn pause-loop
+: repeat 10 [ i => .hello (to-str i) > send pid ]
+# prints 0 through 9, waiting two seconds in between

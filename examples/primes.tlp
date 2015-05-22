@@ -1,0 +1,15 @@
+iterate next init = (
+  k x = .cons x ~(k (next x))
+  k init
+)
+
+nats = iterate (add 1) 0
+
+next (.p stream seen) =
+  stream
+  > drop-while [ seen > any (divides $) ]
+  > [ (head $), .p (tail $) (seen > union (head $)) ]
+
+primes-from stream = ~(next-prime st > n, st => .cons n (primes-from st))
+
+primes = primes-from (.p (drop 2 nats) Set.empty)

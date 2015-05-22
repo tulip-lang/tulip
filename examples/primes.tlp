@@ -1,7 +1,4 @@
-iterate next init = (
-  k x = .cons x ~(k (next x))
-  k init
-)
+iterate next init = loop init [ recur x => .cons x ~(recur (next x)) ]
 
 nats = iterate (add 1) 0
 
@@ -10,6 +7,6 @@ next (.p stream seen) =
   > drop-while [ seen > any (divides $) ]
   > [ (head $), .p (tail $) (seen > union (head $)) ]
 
-primes-from stream = ~(next-prime st > n, st => .cons n (primes-from st))
+primes-from stream = ~(next-prime st > (n, st) => .cons n (primes-from st))
 
 primes = primes-from (.p (drop 2 nats) Set.empty)

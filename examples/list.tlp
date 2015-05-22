@@ -18,15 +18,15 @@ loop init step = (
 
 loop-trace init step = loop init [ x recur => (print x; step x recur) ]
 
-+ foldl f init list = loop (init, list) [
+foldl f init list = loop (init, list) [
   (accum, .cons x xs) recur => recur (f x accum, xs)
   (accum, .nil)       recur => accum
 ]
 
-+ foldr f final list = (
+foldr f final list = (
   k (.cons x xs) = f x ~(k xs)
   k .nil = final
   k list
 )
 
-+ find f = foldr .none [ x rest => f x > [ .t => .some x; .f => rest ] ]
+find f = foldr .none [ x rest => f x > [ .t => .some x; .f => rest ] ]

@@ -1,11 +1,13 @@
+# prelude.tlp
 sleep t = receive [] -timeout=(t, [! .ok ])
 flush! = receive [ _ => flush! ] -timeout=(0, [! .ok ])
 
-pause-loop! = receive [
+# example.tlp
+loop! = receive [
   .hello => (
     print 'hello
     sleep 2
-    pause-loop!
+    loop!
   )
 
   .die => .ok

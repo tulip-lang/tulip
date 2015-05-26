@@ -63,7 +63,7 @@ expr_element = alt(chain, definition)
 
 @generate
 def expr(gen):
-    box = gen.parse(alt(chain, definition).many())
+    box = gen.parse(alt(definition, chain).many())
     elements = [a.get_ast() for a in box.get_list()]
 
     return ASTBox(Sequence(elements))

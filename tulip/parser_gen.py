@@ -113,6 +113,7 @@ class ParseState(object):
         assert len(self.behind) > 0, "can't rewind anymore!"
         self.index -= 1
         self.ahead.append(self.head)
+        self.head = self.behind.pop()
         if self.debug:
             print u"rew: %s" % self.dump()
 

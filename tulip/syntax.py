@@ -136,12 +136,6 @@ class NamedPat(Pattern):
         return u"%%%s" % self.symbol.name
 
 class Definition(ModuleItem):
-    def __init__(self, symbol, patterns, body):
-        assert isinstance(body, Expr)
-        self.symbol = symbol
-        self.patterns = patterns
-        self.body = body
-
     def __init__(self, symbol, patterns, expr):
         self.symbol = symbol
         self.patterns = patterns
@@ -151,10 +145,20 @@ class Definition(ModuleItem):
         name_ = self.symbol.name
         expr_ = self.expr.dump()
         if len(self.patterns) == 0:
-            return u'+ %s = %s' % (name_, expr_)
+            return u'%s = %s' % (name_, expr_)
         else:
             patterns_ = u' '.join([p.dump_nested() for p in self.patterns])
-            return u'+ %s %s = %s' % (name_, patterns_, expr_)
+            return u'%s %s = %s' % (name_, patterns_, expr_)
+
+class Sequence(Expr):
+    def __init__(self, exprs):
+        self.exprs = exprs
+
+    def dump(self):
+        return u'; '.join([e.dump() for e in self.exprs])
+
+    def dump_nested(self):
+        return u'(%s)' % self.dump()
 
 class Module(ModuleItem):
     def __init__(self, name, patterns, items):

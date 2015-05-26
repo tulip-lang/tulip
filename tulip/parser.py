@@ -50,22 +50,23 @@ def chain(gen):
 
 @generate
 def definition(gen):
-    gen.parse(PLUS)
-    name = gen.parse(NAME).get_token().value
-    args = [a.get_ast() for a in gen.parse(pattern.many()).get_list()]
-    gen.parse(EQ)
-    body = gen.parse(expr).get_ast()
+    box = gen.parse(assign).get_list()
+
+    name = box[0].get_token().value
+    args = [a.get_ast() for a in box[1].get_list()]
+
+    body = gen.parse(chain).get_ast()
+
     return ASTBox(Definition(sym(name), args, body))
+
+expr_element = alt(chain, definition)
 
 @generate
 def expr(gen):
-    clauses = [c.get_ast() for c in gen.parse(definition.many()).get_list()]
-    body = gen.parse(chain).get_ast()
+    box = gen.parse(alt(chain, definition).many())
+    elements = [a.get_ast() for a in box.get_list()]
 
-    if len(clauses) == 0:
-        return ASTBox(body)
-    else:
-        return ASTBox(Let(clauses, body))
+    return ASTBox(Sequence(elements))
 
 @generate('pattern')
 def pattern(gen):
@@ -102,7 +103,7 @@ def lam_clause(gen):
     pat = gen.parse(pattern).get_ast()
     gen.parse(NL.opt())
     gen.parse(RARROW)
-    body = gen.parse(expr).get_ast()
+    body = gen.parse(chain).get_ast()
     return ASTBox(Lam.Clause(pat, body))
 
 @generate
@@ -116,6 +117,9 @@ def lam_end(gen):
 autolam_end = expr.skip(RBRACK).map(lambda c: ASTBox(Autolam(c.get_ast())))
 
 lam = lam_start.then(alt(lam_end.backtracking(), autolam_end))
+
+assign = seq(NAME, pattern.many()).skip(EQ).backtracking()
+
 
 @generate
 def balanced_braces(gen):

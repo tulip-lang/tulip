@@ -1,6 +1,6 @@
 au BufNewFile,BufRead *.tlp setf tulip
 
-fun! s:SelectJavascript()
+fun! s:SelectTulip()
   if getline(1) =~# '^#!.*/bin/env\s\+tulip\>'
     set ft=tulip
   endif

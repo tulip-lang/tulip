@@ -1,0 +1,19 @@
+@module corecur
+
+test v = (
+  is-even = [ 0 => .t; x => decr x > is-odd ]
+  is-odd  = [ 0 => .f; x => decr x > is-even ]
+  v > [ .even x => is-even x; .odd x => is-odd x ]
+)
+
+test (.even 3) # => .f
+test (.odd 3)  # => .t
+
+# lazy lifting
+test-2 n = (
+  a = .cons .a b
+  b = .cons .b a
+  take n a
+)
+
+test-2 4 # /[.a .b .a .b]

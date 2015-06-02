@@ -1,0 +1,13 @@
+# repl
+: lazy = ~(print 'forcing; 3)
+=> ~(print 'forcing; 3)
+: lazy-outer = ~(print 'forcing-outer; .ok lazy)
+=> ~(print 'forcing-outer; .ok lazy)
+: result = lazy-outer > [ .ok x => x; .err e => 'error ]
+forcing-outer
+=> ~(print 'forcing; 3)
+: add 4 lazy
+forcing
+=> 7
+: add 4 lazy
+=> 7

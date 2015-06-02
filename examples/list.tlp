@@ -30,3 +30,7 @@ foldr f final list = (
 )
 
 find f = foldr .none [ x rest => f x > [ .t => .some x; .f => rest ] ]
+
+take 0 _ = /[]
+take n .nil = /[]
+take n (.cons x xs) = .cons x ~(take (decr n) xs)

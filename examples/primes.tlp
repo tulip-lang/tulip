@@ -4,7 +4,7 @@ nats = iterate (add 1) 0
 
 next (.p stream seen) =
   stream
-  > drop-while [ seen > any (divides $) ]
+  > drop-while [ n => seen > take-while [ mul $ $ > lte n ] > any (divides n) ]
   > [ (head $), .p (tail $) (seen > union (head $)) ]
 
 primes-from stream = ~(next-prime st > (n, st) => .cons n (primes-from st))

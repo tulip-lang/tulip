@@ -25,7 +25,7 @@ exe "syn match tlKeyword /[@]" . ident . "/"
 exe "syn match tlMacro /\\(\\/" . ident . "\\)/"
 exe "syn match tlFlag /-" . ident . "/"
 
-syn match tlBareString /'[^{]\S*/
+syn match tlBareString /'[^{][^\s\n)\];]*/
 syn region tlString start="'{" end="" contains=tlStringContents
 syn region tlStringContents start="{" end="}" contains=tlStringContents contained
 

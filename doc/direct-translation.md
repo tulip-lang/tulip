@@ -1,8 +1,10 @@
 # parsing notation
 
 `  |  ` denotes a choice between terms
+
 `[...]` denotes a grouping, where all items must be satisfied in the order specified
 - normally bnf implies grouping but i prefer not to
+
 `(...)` denotes an optional term, which does not need to be satisfied
 
 many is satisfied by multiple occurrences of a term

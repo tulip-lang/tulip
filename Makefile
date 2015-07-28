@@ -28,7 +28,7 @@ fetch-externals: $(PYPY_TARGET)
 $(PYPY_TARGET):
 	mkdir -p $(dir $@)
 	curl https://bitbucket.org/pypy/pypy/get/default.tar.bz2 \
-	  | tar -xj -C $(EXTERNALS)/pypy --strip-components=1
+	  | tar -xjf - -C $(EXTERNALS)/pypy --strip-components=1
 	touch $@
 
 # -*- build -*- #

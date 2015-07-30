@@ -14,14 +14,14 @@ loop value = receive [
   p, .get => (send p value; loop value)
 ]
 
-@module Instance pid [
+@object Ref pid [
   set val = .set val > send pid
   get! = .get > send-wait pid
 ]
 
 # repl
 : r = ref 10
-= <module ref.Instance <pid 5>>
+= *<ref/Ref *<Pid 5>>
 : r/get!
 = 10
 : r/set 20

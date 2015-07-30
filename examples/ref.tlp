@@ -7,7 +7,7 @@ send-wait pid msg = (
 # ref.tlp
 @module ref
 
-ref value = Instance (spawn [! loop value ])
+ref value = Instance (spawn [ ! => loop value ])
 
 loop value = receive [
   .set new-value => loop new-value

@@ -7,8 +7,9 @@
 ```
 
 [coc]: http://tinyurl.com/tulip-conduct "Code of Conduct"
+[post]: http://www.jneen.net/posts/2015-07-29-tulip-language-updated "Tulip"
 
-Tulip is a language! [Here is a slightly out-of-date description of it](http://www.jneen.net/posts/2015-03-01-tulip-language).
+[Tulip is a language!][post]
 
 ## Why Tulip?
 

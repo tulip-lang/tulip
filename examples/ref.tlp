@@ -1,7 +1,8 @@
 # prelude.tlp
 send-wait pid msg = (
-  send pid (self!, msg)
-  receive [ x => x ]
+  id = make-id!
+  send pid (self!, id, msg)
+  receive [ (_ ? eq id), x => x ]
 )
 
 # ref.tlp
@@ -11,7 +12,7 @@ ref value = Ref (spawn [ ! => loop value ])
 
 loop value = receive [
   .set new-value => loop new-value
-  p, .get => (send p value; loop value)
+  p, id, .get => (send p (id, value); loop value)
 ]
 
 @object Ref pid [

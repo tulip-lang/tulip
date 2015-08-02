@@ -20,6 +20,8 @@ help:
 	@echo "make help                   - display this message"
 	@echo "make build                  - build the interpreter"
 	@echo "make fetch-externals        - download and unpack external deps"
+	@echo "make run                    - run the Tulip repl"
+	@echo "make clean                  - remove build files"
 
 # -*- externals -*- #
 .PHONY: fetch-externals

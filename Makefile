@@ -22,10 +22,15 @@ help:
 	@echo "make fetch-externals        - download and unpack external deps"
 	@echo "make run                    - run the Tulip repl"
 	@echo "make clean                  - remove build files"
+	@echo "make pyrepl                 - run a python repl with the correct paths set"
 
 # -*- externals -*- #
 .PHONY: fetch-externals
 fetch-externals: $(PYPY_TARGET)
+
+.PHONY: pyrepl
+pyrepl:
+	$(PYTHON_EXEC)
 
 $(PYPY_TARGET):
 	mkdir -p $(dir $@)

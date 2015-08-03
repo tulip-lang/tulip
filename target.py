@@ -1,13 +1,11 @@
 from tulip.symbol import Symbol, SymbolTable
-from tulip.syntax import *
-import tulip.parser as parser
-from tulip.parser_gen import ParseError
 from sys import stdin
 from tulip.libedit import readline
 from tulip.debug import debug
 from rpython.rlib.objectmodel import we_are_translated
 from tulip.lexer import ReaderLexer, Token, LexError
 from tulip.reader import StringReader, FileReader
+from tulip.skeleton import parse_skeleton, ParseError
 
 def entry_point(argv):
     if len(argv) >= 2:
@@ -23,7 +21,7 @@ def run_repl():
     while True:
         try:
             line = readline(': ')
-            print parser.expr.parse(ReaderLexer(StringReader(u'<repl>', line))).dump()
+            print parse_skeleton(ReaderLexer(StringReader(u'<repl>', line))).dump()
         except LexError as e:
             print u'lex error: %d:%d' % (e.lexer.line, e.lexer.col)
             print u'head: <%s>' % e.lexer.head
@@ -44,7 +42,7 @@ def print_logo():
 def run_file(fname):
     reader = FileReader(fname)
     try:
-        print parser.module.parse(ReaderLexer(reader)).get_ast().dump()
+        print parse_skeleton(ReaderLexer(reader)).dump()
     except LexError as e:
         print u'lex error: %d:%d' % (e.lexer.line, e.lexer.col)
         print u'head: <%s>' % e.lexer.head

@@ -1,7 +1,15 @@
 class Value(object):
-    pass
+    def dump(self):
+        assert False, 'abstract'
+
+    def dump_nested(self):
+        return self.dump()
 
 class Int(Value):
+    def __init__(self, value):
+        self.value = value
+
+class String(Value):
     def __init__(self, value):
         self.value = value
 
@@ -12,8 +20,15 @@ class Callable(Value):
     def invoke(self, rt, argv):
         raise "abstract"
 
+class Token(Value):
+    def __init__(self, value):
+        self.value = value
+
+    def dump(self):
+        return u'<Token %s>' % self.value.dump()
+
 class Func(Callable):
-    def __init__(self, bytecode, arity)
+    def __init__(self, bytecode, arity):
         self._arity = arity
         self.bytecode = bytecode
 
@@ -29,22 +44,20 @@ class Tagged(Callable):
         self.symbol = symbol
         self.args = args
 
+    def dump(self):
+        if len(self.args) == 0:
+            return u'.%s' % self.symbol.name
+        else:
+            args = u' '.join([a.dump_nested() for a in self.args])
+            return u'.%s %s' % (self.symbol.name, args)
+
+    def dump_nested(self):
+        return u'(%s)' % self.dump()
+
     def invoke(self, rt, argv):
+        assert False, 'TODO'
 
 # TODO
 class Pattern(Value):
     def __init__(self, bytecode):
         self.bytecode = bytecode
-
-class NativeAction(Value):
-    def __init__(self, impl):
-        self.impl = impl
-
-class NativeFunc(Value):
-    def __init__(self, arity, impl):
-        self.arity = arity
-        self.impl = impl
-
-class Lazy(Value):
-    def __init__(self, application):
-        self.application = application

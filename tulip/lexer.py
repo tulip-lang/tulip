@@ -20,6 +20,9 @@ class Token:
       u"PIPE",
       u"COLON",
       u"STAR",
+      u"COMMA",
+      u"UNDERSCORE",
+      u"QUESTION",
 
       u"AMP",
       u"CHECK",
@@ -29,6 +32,7 @@ class Token:
       u"SLASH",
       u"INT",
       u"NAME",
+      u"STRING",
 
       u"EOF"
     ]
@@ -207,6 +211,26 @@ class ReaderLexer(Lexer):
 
         self.end_record()
 
+    def process_string(self):
+        self.advance()
+
+        self.record()
+        level = 1
+        while True:
+            if self.head == u'{':
+                level += 1
+            elif self.head == u'}':
+                level -= 1
+            elif self.head is None:
+                raise LexError(self)
+
+            if level == 0:
+                self.end_record()
+                self.advance()
+                break
+            else:
+                self.advance()
+
     def process_root(self):
         if self.head is None:
             return Token.EOF
@@ -225,6 +249,16 @@ class ReaderLexer(Lexer):
             self.advance()
             self.skip_lines()
             return Token.LBRACK
+
+        if self.head == u'{':
+            self.process_string()
+            self.skip_ws()
+            return Token.STRING
+
+        if self.head == u'\'':
+            self.advance()
+            self.record_ident()
+            return Token.STRING
 
         if self.head == u']':
             self.advance()
@@ -256,15 +290,30 @@ class ReaderLexer(Lexer):
             self.skip_lines()
             return Token.GT
 
-        if self.head == u'|':
+        if self.head == u'!':
+            self.advance()
+            self.skip_ws()
+            return Token.BANG
+
+        if self.head == u'?':
             self.advance()
             self.skip_lines()
-            return Token.PIPE
+            return Token.QUESTION
+
+        if self.head == u'_':
+            self.advance()
+            self.skip_ws()
+            return Token.UNDERSCORE
 
         if self.head == u':':
             self.advance()
             self.skip_lines()
             return Token.COLON
+
+        if self.head == u',':
+            self.advance()
+            self.skip_lines()
+            return Token.COMMA
 
         if self.head == u'*':
             self.advance()

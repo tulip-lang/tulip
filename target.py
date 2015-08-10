@@ -23,8 +23,7 @@ def run_repl():
             line = readline(': ')
             print parse_skeleton(ReaderLexer(StringReader(u'<repl>', line))).dump()
         except LexError as e:
-            print u'lex error: %d:%d' % (e.lexer.line, e.lexer.col)
-            print u'head: <%s>' % e.lexer.head
+            print e.dump()
         except ParseError as e:
             print e.dump()
         except EOFError:
@@ -44,8 +43,7 @@ def run_file(fname):
     try:
         print parse_skeleton(ReaderLexer(reader)).dump()
     except LexError as e:
-        print u'lex error: %d:%d' % (e.lexer.line, e.lexer.col)
-        print u'head: <%s>' % e.lexer.head
+        print e.dump()
     except ParseError as e:
         print e.dump()
 

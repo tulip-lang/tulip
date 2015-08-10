@@ -79,8 +79,19 @@ class Location(object):
         return u'%d:%d' % (self.line, self.col)
 
 class LexError(StandardError):
-    def __init__(self, lexer):
+    def __init__(self, lexer, message):
         self.lexer = lexer
+        self.message = message
+
+    def dump(self):
+        head_ = self.lexer.head or u'EOF'
+
+        return u'lex error: %d:%d: %s\nhead: <%s>' % (
+          self.lexer.line,
+          self.lexer.col,
+          self.message,
+          head_
+        )
 
 class Lexer(object):
     def setup(self):
@@ -111,6 +122,9 @@ class ReaderLexer(Lexer):
         self.tape = None
         self.recording = False
         self.uninitialized = True
+
+    def error(self, message):
+        raise LexError(self, message)
 
     def setup(self):
         assert self.head is None
@@ -201,7 +215,7 @@ class ReaderLexer(Lexer):
 
     def record_ident(self):
         if not is_alpha(self.head):
-            raise LexError(self)
+            self.error(u'expected an identifier')
 
         self.record()
         self.advance()
@@ -222,7 +236,7 @@ class ReaderLexer(Lexer):
             elif self.head == u'}':
                 level -= 1
             elif self.head is None:
-                raise LexError(self)
+                self.error(u'unmatched close brace }')
 
             if level == 0:
                 self.end_record()
@@ -371,7 +385,7 @@ class ReaderLexer(Lexer):
             self.skip_lines()
             return Token.NL
 
-        raise LexError(self)
+        self.error(u'unexpected character')
 
 
 def is_digit(c):

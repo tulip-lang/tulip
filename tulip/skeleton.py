@@ -38,7 +38,7 @@ def _parse_sequence(lexer, open_tok, expected_close_id):
             error(tok, u'invalid nesting from %s' % open_tok.dump())
         elif tok.tokid == Token.LPAREN:
             elements.append(_parse_sequence(lexer, tok, Token.RPAREN))
-        elif tok.tokid == Token.LBRACK:
+        elif tok.tokid == Token.LBRACK or tok.tokid == Token.MACRO:
             elements.append(_parse_sequence(lexer, tok, Token.RBRACK))
         else:
             elements.append(tag(u'token', [v.Token(tok)]))

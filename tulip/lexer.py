@@ -27,7 +27,7 @@ class Token:
       u"AMP",
       u"CHECK",
       u"TAGGED",
-      u"SLASHED",
+      u"MACRO",
       u"ANNOT",
       u"SLASH",
       u"INT",
@@ -356,11 +356,15 @@ class ReaderLexer(Lexer):
             self.advance()
             if is_alpha(self.head):
                 self.record_ident()
-                self.skip_ws()
-                return Token.SLASHED
             else:
                 self.tape = []
-                return Token.SLASHED
+
+            if self.head == u'[':
+                self.advance()
+                self.skip_lines()
+                return Token.MACRO
+            else:
+                self.error(u'expected [')
 
         if self.head == u'.':
             self.advance()

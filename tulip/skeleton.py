@@ -29,7 +29,7 @@ def _parse_sequence(lexer, open_tok, expected_close_id):
         tok = lexer.next()
         if tok.tokid == Token.EOF:
             if open_tok is None:
-                return tag(u'seq', [build_cons_list(elements)])
+                return build_cons_list(elements)
             else:
                 error(tok, u'invalid nesting, expected %s' % Token.TOKENS[expected_close_id])
         elif open_tok is not None and tok.tokid == expected_close_id:

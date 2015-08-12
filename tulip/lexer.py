@@ -23,8 +23,11 @@ class Token:
       u"COMMA",
       u"UNDERSCORE",
       u"QUESTION",
+      u"DASH",
 
       u"AMP",
+      u"FLAG",
+      u"FLAGKEY",
       u"CHECK",
       u"TAGGED",
       u"MACRO",
@@ -318,6 +321,21 @@ class ReaderLexer(Lexer):
             self.advance()
             self.skip_ws()
             return Token.UNDERSCORE
+
+        if self.head == u'-':
+            self.advance()
+            if is_ws(self.head) or self.head is None:
+                self.skip_ws()
+                return Token.DASH
+            else:
+                self.record_ident()
+                if self.head == u':':
+                    self.advance()
+                    self.skip_lines()
+                    return Token.FLAGKEY
+                else:
+                    self.skip_ws()
+                    return Token.FLAG
 
         if self.head == u':':
             self.advance()

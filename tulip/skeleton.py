@@ -2,9 +2,6 @@ import tulip.value as v
 from tulip.symbol import sym
 from tulip.lexer import Token
 
-def tag(name, values):
-    return v.Tagged(sym(name), values)
-
 def parse_skeleton(lexer):
     lexer.setup()
     parsed = _parse_sequence(lexer, None, 0)
@@ -29,28 +26,26 @@ def _parse_sequence(lexer, open_tok, expected_close_id):
         tok = lexer.next()
         if tok.tokid == Token.EOF:
             if open_tok is None:
-                return build_cons_list(elements)
+                return v.cons_list(elements)
             else:
                 error(tok, u'invalid nesting, expected %s' % Token.TOKENS[expected_close_id])
         elif open_tok is not None and tok.tokid == expected_close_id:
-            return tag(u'nested', [v.Token(open_tok), v.Token(tok), build_cons_list(elements)])
-        elif tok.tokid in [ Token.RPAREN, Token.RBRACK ]:
-            error(tok, u'invalid nesting from %s' % open_tok.dump())
+            return v.tag(u'nested', [v.Token(open_tok), v.Token(tok), v.cons_list(elements)])
+        elif tok.tokid in [ Token.RPAREN, Token.RBRACK, Token.RBRACE ]:
+            if open_tok is not None:
+                error(tok, u'invalid nesting from %s' % open_tok.dump())
+            else:
+                error(tok, u'invalid nesting from the beginning')
         elif tok.tokid == Token.LPAREN:
             elements.append(_parse_sequence(lexer, tok, Token.RPAREN))
         elif tok.tokid == Token.LBRACK or tok.tokid == Token.MACRO:
             elements.append(_parse_sequence(lexer, tok, Token.RBRACK))
+        elif tok.tokid == Token.LBRACE:
+            elements.append(_parse_sequence(lexer, tok, Token.RBRACE))
+        elif tok.tokid == Token.NL and expected_close_id == Token.RPAREN:
+            pass
         else:
-            elements.append(tag(u'token', [v.Token(tok)]))
-
-def build_cons_list(elements):
-    i = len(elements)
-    out = tag(u'nil', [])
-    while i > 0:
-        i -= 1
-        out = tag(u'cons', [elements[i], out])
-
-    return out
+            elements.append(v.tag(u'token', [v.Token(tok)]))
 
 def parse_from_string(s):
     from tulip.reader import StringReader

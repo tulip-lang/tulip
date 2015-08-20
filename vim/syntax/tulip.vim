@@ -10,7 +10,7 @@ setlocal iskeyword+=-
 
 syntax sync fromstart
 
-syntax match   tlPunctuation           /\%(:\|,\|\;\|!\|>\|=\|(\|)\|\[\|\]\||\)/
+syntax match   tlPunctuation           /\%(:\|,\|\;\|!\|>\|=\|(\|)\|\[\|\]\||\|{\|}\|\~\)/
 
 syn match tlLet /+\s*/ nextgroup=tlFuncName
 
@@ -22,10 +22,11 @@ exe "syn match tlName /" . ident . "/"
 exe "syn match tlDotted /[.]" . ident . "/"
 exe "syn match tlCheck /[\\%]" . ident . "/"
 exe "syn match tlKeyword /[@]" . ident . "/"
+exe "syn match tlDynamic /[\\$]" . ident . "/"
 exe "syn match tlMacro /\\(\\/" . ident . "\\)/"
 exe "syn match tlFlag /-" . ident . "/"
 
-syn match tlBareString /'[^{][^\s\n)\];]*/
+syn match tlBareString /'[^{][^ 	\n)\];]*/
 syn region tlString start="'{" end="" contains=tlStringContents
 syn region tlStringContents start="{" end="}" contains=tlStringContents contained
 
@@ -41,4 +42,5 @@ hi! def link tlString      String
 hi! def link tlStringContents String
 hi! def link tlFuncName    Function
 hi! def link tlLet         Punctuation
+hi! def link tlDynamic     Identifier
 hi! def link tlComment     Comment

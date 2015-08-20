@@ -44,8 +44,9 @@ As for tulip itself, here's a general sketch of the architecture:
 
 * Parsing is three steps:
   - A hand-written lexer in `lexer.py` (an object with setup/next/teardown methods)
-  - Pre-baked simple parse which leaves macros unparsed (`parser.py` and `parser_gen.py`)
-  - Macro parsing, which might use the pre-baked parser to consume expressions, etc
+  - A skeleton syntax is created in `skeleton.py`, which is a tulip data-structure representing only the tokens and nesting
+  - Macros are expanded into more skeleton trees (TODO)
+  - The skeleton tree is turned into bytecode, with maybe an intermediate tree (TODO)
 
 * From parsing, a `Syntax` object is created.  These will have `.compile(ctx)` methods, which accept a CompileContext object to which instructions and constants are pushed.
 * A compile context can render its bytecode to a Bytecode object, which can be used to create Function objects, etc.

@@ -49,6 +49,18 @@ class Func(Callable):
 cons_sym = sym(u'cons')
 nil_sym = sym(u'nil')
 
+def cons_list(elements):
+    i = len(elements)
+    out = tag(u'nil', [])
+    while i > 0:
+        i -= 1
+        out = tag(u'cons', [elements[i], out])
+
+    return out
+
+def tag(name, values):
+    return Tagged(sym(name), values)
+
 class Tagged(Callable):
     def __init__(self, symbol, args):
         self.symbol = symbol

@@ -5,16 +5,16 @@
 @impl map f (xs:.cons _ _) = map-list f xs
 @impl map f .nil = .nil
 
-map-list f xs = (
+map-list f xs = {
   map-step (.nil) out = out
   map-step (.cons x xs) out = map-step xs (.cons (f x) out)
   map-step xs .nil
-)
+}
 
-loop init step = (
+loop init step = {
   recur x = step x recur
   recur init
-)
+}
 
 loop-trace init step = loop init [ x recur => (print x; step x recur) ]
 
@@ -23,11 +23,14 @@ foldl f init list = loop (init, list) [
   (accum, .nil)       recur => accum
 ]
 
-foldr f final list = (
-  k (.cons x xs) = f x ~(k xs)
-  k .nil = final
+foldr f final list = {
+  k = [
+    .cons x xs => f x ~(k xs)
+    .nil => final
+  ]
+
   k list
-)
+}
 
 find f = foldr .none [ x rest => f x > [ .t => .some x; .f => rest ] ]
 

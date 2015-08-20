@@ -9,6 +9,9 @@ class Token:
       u"LBRACK",
       u"RBRACK",
 
+      u"LBRACE",
+      u"RBRACE",
+
       u"GT",
       u"DOLLAR",
       u"NL",
@@ -268,14 +271,24 @@ class ReaderLexer(Lexer):
             return Token.LBRACK
 
         if self.head == u'{':
-            self.process_string()
+            self.advance()
+            self.skip_lines()
+            return Token.LBRACE
+
+        if self.head == u'}':
+            self.advance()
             self.skip_ws()
-            return Token.STRING
+            return Token.RBRACE
 
         if self.head == u'\'':
             self.advance()
-            self.record_ident()
-            return Token.STRING
+            if self.head == u'{':
+                self.process_string()
+                self.skip_ws()
+                return Token.STRING
+            else:
+                self.record_ident()
+                return Token.STRING
 
         if self.head == u']':
             self.advance()

@@ -21,6 +21,7 @@ help:
 	@echo "make build                  - build the interpreter"
 	@echo "make fetch-externals        - download and unpack external deps"
 	@echo "make run                    - run the Tulip repl"
+	@echo "make run-interpreted        - run the Tulip repl, interpreted through python"
 	@echo "make clean                  - remove build files"
 	@echo "make pyrepl                 - run a python repl with the correct paths set"
 

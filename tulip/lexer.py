@@ -33,6 +33,7 @@ class Token:
       u"FLAGKEY",
       u"CHECK",
       u"TAGGED",
+      u"TICKED",
       u"MACRO",
       u"ANNOT",
       u"SLASH",
@@ -289,6 +290,12 @@ class ReaderLexer(Lexer):
             else:
                 self.record_ident()
                 return Token.STRING
+
+        if self.head == u'`':
+            self.advance()
+            self.record_ident()
+            self.skip_lines()
+            return Token.TICKED
 
         if self.head == u']':
             self.advance()

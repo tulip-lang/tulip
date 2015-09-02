@@ -3,3 +3,9 @@
 
 # fetched dependencies
 /.externals
+
+# python artifacts
+**.pyc
+
+# ???
+/dist

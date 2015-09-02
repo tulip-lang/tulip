@@ -1,6 +1,9 @@
 from tulip.symbol import sym
 import tulip.lexer as L
 
+class MalformedValue(ValueError):
+    pass
+
 class Value(object):
     def dump(self):
         assert False, 'abstract'
@@ -8,13 +11,33 @@ class Value(object):
     def dump_nested(self):
         return self.dump()
 
+    def matches_tag(self, tag, arity):
+        return False
+
+    def matches_type(self, name):
+        return False
+
+    def is_list(self):
+        return self.matches_tag(nil_sym, 0) or self.matches_tag(cons_sym, 2)
+
+int_sym = sym(u'int')
 class Int(Value):
     def __init__(self, value):
         self.value = value
 
+    def matches_type(self, name):
+        return name == int_sym
+
+    def dump(self):
+        return unicode(str(self.value))
+
+string_sym = sym(u'str')
 class String(Value):
     def __init__(self, value):
         self.value = value
+
+    def matches_type(self, name):
+        return name == string_sym
 
 class Callable(Value):
     def arity(self):
@@ -58,6 +81,22 @@ def cons_list(elements):
 
     return out
 
+def rpy_list(value):
+    out = []
+    for e in cons_each(value):
+        out.append(e)
+    return out
+
+def cons_each(value):
+    while True:
+        if value.matches_tag(cons_sym, 2):
+            yield value.args[0]
+            value = value.args[1]
+        elif value.matches_tag(nil_sym, 0):
+            return
+        else:
+            raise MalformedValue(u'rpy_list: bad cons-list')
+
 def tag(name, values):
     return Tagged(sym(name), values)
 
@@ -65,6 +104,9 @@ class Tagged(Callable):
     def __init__(self, symbol, args):
         self.symbol = symbol
         self.args = args
+
+    def matches_tag(self, tag, arity):
+        return self.symbol == tag and len(self.args) == arity
 
     def dump(self):
         if self.is_list():
@@ -77,27 +119,9 @@ class Tagged(Callable):
             return u'.%s %s' % (self.symbol.name, args)
 
     def inspect_cons_list(self):
-        current = self
-        inspected = []
+        els = [e.dump() for e in rpy_list(self)]
 
-        try:
-            while True:
-                if current.symbol == cons_sym:
-                    inspected.append(current.args[0].dump())
-                    current = current.args[1]
-                elif current.symbol == nil_sym:
-                    break
-                else:
-                    assert False, 'bad cons-list'
-        except KeyError as e:
-            assert False, 'bad cons-list'
-
-        return u'/[%s]' % u'; '.join(inspected)
-
-
-
-    def is_list(self):
-        return self.symbol == nil_sym or self.symbol == cons_sym
+        return u'/[%s]' % u'; '.join(els)
 
     def dump_nested(self):
         if self.is_list():

@@ -1,0 +1,14 @@
+* SCHEDULE
+** abstract machine
+*** TODO scope swapping & shadowing
+class implementation is done, just need to figure out where and when to swap
+it's probably better to do this in dispatch and uncomment dispatch.py:23 rather than managing context in the rules themselves
+*** TODO rules
+the machine rules are completely unimplemented
+
+* NOTES
+** abstract machine
+*** bindings
+- there are no cases where tags need to be bound
+- figuring out where to start shadowing is easy, but where to stop is not
+- scopes also need to be deleted sometime, but we may need the process model to do that reliably -- dunno really i'm pretty sleepy

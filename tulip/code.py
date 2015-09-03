@@ -17,7 +17,7 @@ class Apply(Code):
         return u'<apply [%s]>' % u' '.join([e.dump() for e in self.nodes])
 
 class Lambda(Code):
-    def __init__(symbols, body):
+    def __init__(self, symbols, body):
         self.symbols = symbols
         self.body = body
 
@@ -52,4 +52,12 @@ class Tag(Code):
         self.symbol = symbol
 
     def dump(self):
-        return u'<tag .%s>' self.symbol.name
+        return u'<tag .%s>' % self.symbol.name
+
+class Let(Code):
+    def __init__(self, bind, body):
+        self.bind = bind
+        self.body = body
+
+    def dump(self):
+        return u'<let %(n)s %(b)s>' % {'n': self.bind.name, 'b': self.body.dump()}

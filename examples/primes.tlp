@@ -12,4 +12,4 @@ next (.p stream seen) =
 
 primes-from stream = ~(next-prime st > (n, st) => .cons n (primes-from st))
 
-primes = primes-from (.p (drop 2 nats) Set.empty)
+primes = primes-from (.p (drop 2 nats) Set/empty)

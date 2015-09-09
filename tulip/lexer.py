@@ -372,6 +372,11 @@ class ReaderLexer(Lexer):
             self.skip_ws()
             return Token.STAR
 
+        if self.head == u'~':
+            self.advance()
+            self.skip_ws()
+            return Token.TILDE
+
         if self.head == u'%':
             self.advance()
             self.record_ident()

@@ -5,31 +5,57 @@ from tulip.debug import debug
 from rpython.rlib.objectmodel import we_are_translated
 from tulip.lexer import ReaderLexer, Token, LexError
 from tulip.reader import StringReader, FileReader
-from tulip.skeleton import parse_skeleton, ParseError
+from tulip.skeleton import parse_skeleton, UnmatchedError, ParseError
 from tulip.interpreter.machine import MachineContext
+from tulip.compiler import compile_base, CompileError
 
 def entry_point(argv):
     if len(argv) >= 2:
         return run_file(argv[1])
     elif stdin.isatty:
-        # return run_repl()
-        return run_machine()
+        return run_repl()
+        # return run_machine()
     else:
         assert False, u'TODO: actually implement an arg parser'
 
+repl_char_map = {
+    Token.LPAREN: u'(',
+    Token.LBRACE: u'{',
+    Token.LBRACK: u'[',
+    Token.MACRO: u'['
+}
 def run_repl():
     print_logo()
 
+    lines = []
+    last_unmatched = None
+
     while True:
+        if last_unmatched is not None:
+            prompt = '%s: ' % str(repl_char_map[last_unmatched.tokid])
+        else:
+            prompt = ' : '
+
+        last_unmatched = None
+
         try:
-            line = readline(': ')
-            print parse_skeleton(ReaderLexer(StringReader(u'<repl>', line))).dump()
+            lines.append(readline(prompt))
+            code = u'\n'.join(lines)
+            print compile_base(parse_skeleton(ReaderLexer(StringReader(u'<repl>', code)))).dump()
+            lines = []
+        except UnmatchedError as e:
+            last_unmatched = e.token
         except LexError as e:
             print e.dump()
         except ParseError as e:
             print e.dump()
+        except CompileError as e:
+            print e.dump()
         except EOFError:
             break
+        finally:
+            if last_unmatched is None:
+                lines = []
 
     return 0
 

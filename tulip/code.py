@@ -60,4 +60,4 @@ class Let(Code):
         self.body = body
 
     def dump(self):
-        return u'<let %(n)s %(b)s>' % {'n': self.bind.name, 'b': self.body.dump()}
+        return u'<let %s %s>' % (self.bind.name, self.body.dump())

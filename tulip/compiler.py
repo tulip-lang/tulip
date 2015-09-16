@@ -39,24 +39,6 @@ class Compiler(object):
         if len(self.errors) > 0:
             raise CompileError(self.errors)
 
-
-class ModuleCompiler(object):
-    def __init__(self, compiler):
-        self.compiler = compiler
-        self.members = {}
-
-    def get_name(self):
-        assert False, u'TODO'
-
-    def get_module(self):
-        assert False, u'TODO'
-
-    def compile_defn(self, skeleton):
-        frame = FrameCompiler(self, None)
-        frame.compile(skeleton)
-        return frame.get_expr()
-
-
 token_sym = sym(u'token')
 nested_sym = sym(u'nested')
 

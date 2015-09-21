@@ -1,6 +1,6 @@
 # prelude.tlp
-sleep t = receive [] -timeout: (t, [ ! => .ok ])
-flush! = receive [ _ => flush! ] -timeout: (0, [ ! => .ok ])
+sleep t = receive [] -timeout: (t, { ! => .ok })
+flush! = receive [ _ => flush! ] -timeout: (0, { ! => .ok })
 
 # example.tlp
 loop! = receive [

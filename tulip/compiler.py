@@ -74,6 +74,11 @@ def compile_term(e, context):
         elif tok.tokid == Token.TAGGED:
             assert tok.value is not None
             return c.Tag(sym(tok.value))
+        elif tok.tokid == Token.FLAG:
+            assert tok.value is not None
+            return c.Flag(sym(tok.value))
+        elif tok.tokid == Token.BANG:
+            context.error(tok, u'improper ! in term position')
         else:
             context.error(tok, u'TODO: unsupported token')
     elif e.matches_tag(nested_sym, 3):
@@ -91,17 +96,27 @@ def compile_term(e, context):
             return compile_expr(body, context)
         elif open_tok.tokid == Token.LBRACE:
             return compile_block(body, context)
+        elif open_tok.tokid == Token.LBRACK:
+            if seq_contains(body, Token.RARROW):
+                context.error(open_tok, u'TODO: bound lambdas with patterns')
+            return compile_autolam(body, context)
         else:
             context.error(open_tok, u'TODO: unsupported nesting')
 
 chain_sym = sym(u'#chain#')
+autovar_sym = sym(u'$')
 
 def compile_expr(expr, context):
     chain = [[]]
     found_dash = False
+    skeletons = rpy_list(expr)
+    i = 0
 
-    for e in cons_each(expr):
+    while i < len(skeletons):
+        e = skeletons[i]
+
         tok = get_tok(e)
+
         if tok is not None and tok.tokid == Token.GT:
             if len(chain) >= 2 and not found_dash:
                 chain[-1].append(c.Name(chain_sym))
@@ -114,8 +129,40 @@ def compile_expr(expr, context):
                 context.error(tok, u'dash can\'t appear in the first segment of a chain')
 
             chain[-1].append(c.Name(chain_sym))
+        elif tok is not None and tok.tokid == Token.BANG:
+            if len(chain[-1]) > 0:
+                chain[-1].append(c.Constant(v.bang))
+            elif isinstance(chain[-1][0], c.Tag):
+                context.error(tok, u'`!` can\'t be passed to a tag constructor')
+            else:
+                context.error(tok, u'`!` must appear only in argument position')
+        elif tok is not None and tok.tokid == Token.FLAGKEY:
+            key = tok
+            pairs = []
+
+            while True:
+                i += 1
+                if i >= len(skeletons):
+                    context.error(key, u'flagkey needs a value!')
+                    break
+
+                pairs.append((sym(key.value), compile_term(skeletons[i], context)))
+
+                if i + 1 >= len(skeletons):
+                    break
+
+                next = get_tok(skeletons[i+1])
+                if next is not None and next.tokid == Token.FLAGKEY:
+                    key = next
+                    i += 1
+                else:
+                    break
+
+            chain[-1].append(c.FlagMap(pairs))
         else:
             chain[-1].append(compile_term(e, context))
+
+        i += 1
 
     if len(chain) >= 2 and not found_dash:
         chain[-1].append(c.Name(chain_sym))
@@ -138,17 +185,16 @@ def make_apply(segments):
         return c.Apply(segments)
 
 def compile_autolam(expr, context):
-    pass
+    assert False, u'TODO'
+
 
 def compile_block(expr, context):
-    # TODO: let runs
-
     parts = []
+    last_let_run = []
+
     for line in split_lines(expr):
-        print line
         is_let = False
         split_index = 0
-        last_let_run = []
 
         for i, el in enumerate(line):
             tok = get_tok(el)
@@ -158,16 +204,16 @@ def compile_block(expr, context):
                 break
 
         if is_let:
-            last_let_run.append((line[0:split_index], line[split_index:-1]))
+            last_let_run.append((line[0:split_index], line[split_index:len(line)]))
         else:
             if len(last_let_run) > 0:
-                parts.concat(compile_let_run(last_let_run, context))
+                parts.extend(compile_let_run(last_let_run, context))
                 last_let_run = []
 
             parts.append(compile_expr(cons_list(line), context))
 
     if len(last_let_run) > 0:
-        parts.concat(compile_let_run(last_let_run, context))
+        parts.extend(compile_let_run(last_let_run, context))
 
     if len(parts) == 1:
         return parts[0]
@@ -204,7 +250,7 @@ def get_tok(skel):
 def seq_contains(seq, toktype):
     for e in cons_each(seq):
         tok = get_tok(e)
-        if e.tokid == toktype:
+        if tok is not None and tok.tokid == toktype:
             return True
 
     return False

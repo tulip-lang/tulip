@@ -54,6 +54,21 @@ class Tag(Code):
     def dump(self):
         return u'<tag .%s>' % self.symbol.name
 
+class Flag(Code):
+    def __init__(self, symbol):
+        self.symbol = symbol
+
+    def dump(self):
+        return u'<flag -%s>' % self.symbol.name
+
+class FlagMap(Code):
+    def __init__(self, pairs):
+        self.pairs = pairs
+
+    def dump(self):
+        pairs_ = u' '.join([u"-%s: %s" % (s.name, e.dump()) for (s, e) in self.pairs])
+        return u'<flag-map %s>' % pairs_
+
 class Let(Code):
     def __init__(self, bind, body):
         self.bind = bind

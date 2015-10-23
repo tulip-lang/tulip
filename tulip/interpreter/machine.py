@@ -1,8 +1,24 @@
 # interface to evaluation
 
-from tulip.interpreter.dispatch import *
 from tulip.code import *
-from tulip.symbol import Symbol
+from tulip.interpreter.representation import preprocess
+
+# should print 1
+continuationTest = Block([ Let(Name("foo"), Constant(1))
+                         , Let(Name("bar"), Lambda([Name("_")], Block([Apply([Builtin("print", 1, []), Name("foo")])])))
+                         , Let(Name("foo"), Constant(3))
+                         , Apply([Name("bar"), Constant(3)])
+                         ])
+
+# should reduce to <literal 2>
+bindingTest = Block([ Let(Name("x"), Constant(2)), Apply([Name("x")])])
+
+# should print "test"
+builtinTest = Builtin("print", 1, [Constant("test")])
+
+# should print "lambda-test"
+lambdaTest = Apply([Lambda([Name("x")], Builtin("print", 1, Name("x"))), Constant("lambda-test")])
+
 
 class MachineContext():
     """
@@ -12,27 +28,28 @@ class MachineContext():
 
     def __init__(self, ast):
         # DEBUG: hardcoded program
-        ast = Apply([Name(Symbol("f", 0)), Name(Symbol("x", 1))])
-        self.program = ast
         self.cycle   = 0
         self.symbols = None
-        self.cursor  = ast
+        self.program = None
+
+        print "program in: " + bindingTest.dump()
+        print
+
+        d = preprocess(bindingTest)
+        print d.show()
 
     def step(self, n):
         """performs n iterations of the interpreter loop"""
         while n > 0:
-            dispatch(self.cursor, self)
             n = n - 1
 
     def loop(self):
         """runs the interpreter loop until program yields"""
-        while(dispatch(self.cursor, self)):
-            self.loop()
 
     def halt(self):
         """prematurely stops evaluation in this context"""
         assert False, "DO NOT IMPLEMENT CONCURRENCY YET"
 
     def dump(self):
-        """returns all context internal state"""
+        """returns all context internal state for debugging"""
         return

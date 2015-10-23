@@ -1,25 +1,19 @@
-# symbol table structure
+class Scope(dict):
+    def __init__(self, id, parent):
+        self.id = id
+        self.parent = parent
 
-class SymbolTable():
-    def __init__(self, parent):
-        self.bindings = []
-        self.parent   = parent
-        self.children = []
-        if parent:
-            parent.children.append(self)
+    def show(self):
+        return "SCOPE TABLE"
 
-    def lookup(self, name):
-        for bind in self.bindings:
-            if bind.name == name:
-                return bind
-            else:
-                continue
-        if parent:
-            return self.parent.lookup(name)
-        else:
-            return None
+    def __setitem__(self, k, v):
+        dict.__setitem__(self, k, v)
 
-class Bind():
-    def __init__(self, name, value):
-        self.name = name
-        self.value = value
+def lookup(scope, name):
+    v = scope.get(name)
+    if v:
+        return v
+    elif scope.parent:
+        return lookup(scope.parent, name)
+    else:
+        return None

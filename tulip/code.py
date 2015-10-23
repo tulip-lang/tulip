@@ -7,7 +7,7 @@ class Constant(Code):
         self.value = value
 
     def dump(self):
-        return u'<const %s>' % self.value.dump()
+        return u'<const %s>' % self.value
 
 class Apply(Code):
     def __init__(self, nodes):
@@ -30,7 +30,7 @@ class Block(Code):
         self.nodes = nodes
 
     def dump(self):
-        return u'<block [%s]>' % u' '.join([e.dump() for e in self.nodes])
+        return u'<block [%s]>' % u'; '.join([e.dump() for e in self.nodes])
 
 class Branch(Code):
     def __init__(self, clauses):
@@ -45,14 +45,14 @@ class Name(Code):
         self.symbol = symbol
 
     def dump(self):
-        return u'<name %s>' % self.symbol.name
+        return u'<name %s>' % self.symbol
 
 class Tag(Code):
     def __init__(self, symbol):
         self.symbol = symbol
 
     def dump(self):
-        return u'<tag .%s>' % self.symbol.name
+        return u'<tag .%s>' % self.symbol
 
 class Let(Code):
     def __init__(self, bind, body):
@@ -60,4 +60,16 @@ class Let(Code):
         self.body = body
 
     def dump(self):
-        return u'<let %(n)s %(b)s>' % {'n': self.bind.name, 'b': self.body.dump()}
+        return u'<let %(n)s %(b)s>' % {'n': self.bind.dump(), 'b': self.body.dump()}
+
+class Builtin(Code):
+    def __init__(self, name, arity, args):
+        self.name = name
+        self.arity = arity
+        self.args = args
+
+    def dump(self):
+        return u'<builtin %(n)s/%(a)d %(v)s>' % { 'n': self.name
+                                                , 'a': self.arity
+                                                , 'v': u' '.join([e.dump() for e in self.args])
+                                                }

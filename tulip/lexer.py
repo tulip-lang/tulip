@@ -61,8 +61,8 @@ class Token:
     def is_eof(self):
         return self.tokid == Token.EOF
 
-for i in range(len(Token.TOKENS)):
-    setattr(Token, Token.TOKENS[i], r_uint(i))
+for i, tokname in enumerate(Token.TOKENS):
+    setattr(Token, tokname, r_uint(i))
 
 class LocRange(object):
     def __init__(self, start, end):

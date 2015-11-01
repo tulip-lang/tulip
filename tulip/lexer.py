@@ -217,7 +217,6 @@ class ReaderLexer(Lexer):
             elif self.head in [u'\r', u'\n', u';']:
                 self.advance()
             else:
-                self._advance_through_ws()
                 break
 
     def record_ident(self):

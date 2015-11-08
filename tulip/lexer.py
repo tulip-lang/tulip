@@ -237,7 +237,12 @@ class ReaderLexer(Lexer):
         self.record()
         level = 1
         while True:
-            if self.head == u'{':
+            # The value of the token is literally what appears inside the curlies -
+            # escapes will be handled later in the compiler. But we have to detect
+            # backslashes so we close the token at the right point.
+            if self.head == u'\\':
+                self.advance()
+            elif self.head == u'{':
                 level += 1
             elif self.head == u'}':
                 level -= 1

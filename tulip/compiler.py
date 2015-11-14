@@ -174,7 +174,7 @@ def compile_segment(is_first, segment, context):
             elif isinstance(code_segment[0], c.Tag):
                 context.error(tok, u'`!` can\'t be passed to a tag constructor')
             else:
-                code_segment.append(c.Constant(v.bang))
+                code_segment[-1] = c.Apply([code_segment[-1], c.Constant(v.bang)])
         elif tok is not None and tok.tokid == Token.FLAGKEY:
             key = tok
             pairs = []

@@ -7,7 +7,7 @@ class Constant(Code):
         self.value = value
 
     def dump(self):
-        return u'<const %s>' % self.value
+        return u'<const %s>' % self.value.dump()
 
 class Apply(Code):
     def __init__(self, nodes):

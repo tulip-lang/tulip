@@ -1,5 +1,5 @@
 from rpython.rlib.rarithmetic import r_uint
-from tulip.lexer import Token
+from tulip.lexer import Token, DummyToken
 from tulip.symbol import sym
 from tulip.value import rpy_list, cons_list, cons_sym, cons_each, malformed
 import tulip.value as v
@@ -41,6 +41,7 @@ class Compiler(object):
 
 token_sym = sym(u'token')
 nested_sym = sym(u'nested')
+nil_sym = sym(u'nil')
 
 class CompileContext(object):
     def __init__(self, compiler, module):
@@ -95,88 +96,161 @@ def compile_term(e, context):
         if open_tok.tokid == Token.LPAREN:
             return compile_expr(body, context)
         elif open_tok.tokid == Token.LBRACE:
-            return compile_block(body, context)
+            if body.matches_tag(nil_sym, 0):
+                context.error(open_tok, u'empty block!')
+            else:
+                return compile_block(body, context)
         elif open_tok.tokid == Token.LBRACK:
             if seq_contains(body, Token.RARROW):
-                context.error(open_tok, u'TODO: bound lambdas with patterns')
+                return compile_lam(body, context)
             return compile_autolam(body, context)
         else:
             context.error(open_tok, u'TODO: unsupported nesting')
 
 chain_sym = sym(u'#chain#')
 autovar_sym = sym(u'$')
+t_sym = sym(u't')
+f_sym = sym(u'f')
 
-def compile_expr(expr, context):
-    chain = [[]]
-    found_dash = False
-    skeletons = rpy_list(expr)
+def test_match(arg, tag, arity):
+    return c.Builtin(u'test-match', 3, [arg, c.Tag(sym(tag)), c.Constant(v.Int(arity))])
+
+def compile_pattern(pattern, arg, body, next, context):
+    return compile_pattern_term(pattern[0]) # TODO
+
+def compile_pattern_term(term, arg, body, next, context):
+    tok = get_token(term)
+
+    if tok:
+        if tok.tokid == Token.NAME:
+            return c.Block([c.Let(sym(tok.value), arg), body])
+        elif tok.tokid == Token.TAGGED:
+            return c.Branch([
+                (test_match(arg, tok.value, 0), body),
+                (c.Tag(t_sym), next)
+            ])
+    elif pattern.matches_tag(nested_sym, 3):
+        open = pattern.args[0]
+        close = pattern.args[1]
+        sub_pat = pattern.args[2]
+
+        if open.tok_id == Token.LPAREN:
+            return compile_pattern(pattern, arg, rpy_list(sub_pat), body, next, context)
+        else:
+            context.error(open, u'unexpected token in pattern')
+
+
+
+
+def compile_lam(body, context):
+    assert False, 'TODO'
+    # clauses = [split_at(line, Token.RARROW, max=2) for line in split_lines(body)]
+
+    # last = c.Name(sym('todo-crash!'))
+    # i = len(clauses)
+    # while i > 0:
+    #     i -= 1
+    #     clause = clauses[i]
+    #     last = clause
+
+    # for i in xrange(len(body) 
+
+def compile_segment(is_first, segment, context):
+    print 'compile_segment', [t.dump() for t in segment]
+    assert len(segment) > 0, u'TODO: gracefully handle >>'
+
+    add_dash(is_first, segment, context)
+
+    code_segment = []
     i = 0
-
-    while i < len(skeletons):
-        e = skeletons[i]
+    while i < len(segment):
+        e = segment[i]
 
         tok = get_tok(e)
 
-        if tok is not None and tok.tokid == Token.GT:
-            if len(chain) >= 2 and not found_dash:
-                chain[-1].append(c.Name(chain_sym))
-
-            chain.append([])
-            found_dash = False
-        elif tok is not None and tok.tokid == Token.DASH:
-            found_dash = True
-            if len(chain) < 2:
-                context.error(tok, u'dash can\'t appear in the first segment of a chain')
-
-            chain[-1].append(c.Name(chain_sym))
-        elif tok is not None and tok.tokid == Token.BANG:
-            if len(chain[-1]) > 0:
-                chain[-1].append(c.Constant(v.bang))
-            elif isinstance(chain[-1][0], c.Tag):
+        if tok is not None and tok.tokid == Token.BANG:
+            if len(code_segment) == 0:
+                context.error(tok, u'`!` must appear only in argument position')
+            elif isinstance(code_segment[0], c.Tag):
                 context.error(tok, u'`!` can\'t be passed to a tag constructor')
             else:
-                context.error(tok, u'`!` must appear only in argument position')
+                code_segment.append(c.Constant(v.bang))
         elif tok is not None and tok.tokid == Token.FLAGKEY:
             key = tok
             pairs = []
 
             while True:
                 i += 1
-                if i >= len(skeletons):
+                if i >= len(segment):
                     context.error(key, u'flagkey needs a value!')
                     break
 
-                pairs.append((sym(key.value), compile_term(skeletons[i], context)))
+                if is_tok(segment[i], Token.DASH):
+                    compiled = c.Name(chain_sym)
+                else:
+                    compiled = compile_term(segment[i], context)
 
-                if i + 1 >= len(skeletons):
+                pairs.append((sym(key.value), compiled))
+
+                if i + 1 >= len(segment):
                     break
 
-                next = get_tok(skeletons[i+1])
+                next = get_tok(segment[i+1])
                 if next is not None and next.tokid == Token.FLAGKEY:
                     key = next
                     i += 1
                 else:
                     break
 
-            chain[-1].append(c.FlagMap(pairs))
+            code_segment.append(c.FlagMap(pairs))
+        elif tok is not None and tok.tokid == Token.DASH:
+            code_segment.append(c.Name(chain_sym))
         else:
-            chain[-1].append(compile_term(e, context))
+            code_segment.append(compile_term(e, context))
 
         i += 1
 
-    if len(chain) >= 2 and not found_dash:
-        chain[-1].append(c.Name(chain_sym))
+    return code_segment
+
+def add_dash(is_first, segment, context):
+    dash = find_token(segment, Token.DASH)
+
+    if dash is not None and is_first:
+        context.error(dash, u'dash can\'t appear in the first segment of a chain')
+    elif dash is None and not is_first:
+        segment.append(v.tag(u'token', [v.Token(DummyToken(Token.DASH, None))]))
+
+def dummy_token(type, value=None):
+    return v.tag(u'token', [v.Token(DummyToken(type, value))])
+
+def compile_expr(expr, context):
+    skeletons = rpy_list(expr)
+
+    chain_lambda = len(skeletons) > 0 and is_tok(skeletons[0], Token.GT)
+
+    if chain_lambda:
+        skeletons.pop(0)
+
+    raw_chain = split_at(skeletons, Token.GT, context, u'empty sequence')
+
+    chain = [compile_segment(i == 0 and not chain_lambda, segment, context) for (i, segment) in enumerate(raw_chain)]
 
     if len(chain) == 1:
-        return make_apply(chain[0])
+        body = make_apply(chain[0])
+    else:
+        # thread the chain together with let-assignments to the chain var
+        elements = [None] * len(chain)
+        for i in xrange(0, len(chain)-1):
+            elements[i] = c.Let(chain_sym, make_apply(chain[i]))
 
-    elements = [None] * len(chain)
-    for i in xrange(0, len(chain)-1):
-        elements[i] = c.Let(chain_sym, make_apply(chain[i]))
+        elements[-1] = make_apply(chain[-1])
 
-    elements[-1] = make_apply(chain[-1])
+        body = c.Block(elements)
 
-    return c.Block(elements)
+    if chain_lambda:
+        return c.Lambda([chain_sym], body)
+    else:
+        return body
 
 def make_apply(segments):
     if len(segments) == 1:
@@ -191,20 +265,20 @@ def compile_autolam(expr, context):
 def compile_block(expr, context):
     parts = []
     last_let_run = []
+    lines = split_lines(expr)
 
-    for line in split_lines(expr):
-        is_let = False
-        split_index = 0
+    for (i, line) in enumerate(lines):
+        assert len(line) > 0, u'empty line!'
 
-        for i, el in enumerate(line):
-            tok = get_tok(el)
-            if tok is not None and tok.tokid == Token.EQ:
-                is_let = True
-                split_index = i
-                break
+        (equal_sign, before, after) = try_split(line, Token.EQ)
+        is_let = equal_sign is not None
+
+        if is_let and i == len(lines) - 1:
+            context.error(equal_sign, u'block can\'t end with assignment!')
+            return
 
         if is_let:
-            last_let_run.append((line[0:split_index], line[split_index:len(line)]))
+            last_let_run.append(before, after)
         else:
             if len(last_let_run) > 0:
                 parts.extend(compile_let_run(last_let_run, context))
@@ -225,18 +299,34 @@ def compile_let_run(let_run, context):
     assert False, u'TODO: compile let runs'
 
 def split_lines(seq):
+    return split_at(rpy_list(seq), Token.NL)
+
+def split_at(skeletons, toktype, context=None, err=None, max=0):
     out = [[]]
+    last_tok = None
+    assert len(skeletons) > 0
 
-    elements = rpy_list(seq)
+    for i in xrange(0, len(skeletons)):
+        tok = get_tok(skeletons[i])
 
-    for i in xrange(0, len(elements)):
-        tok = get_tok(elements[i])
-        if tok is not None and tok.tokid == Token.NL:
-            out.append([])
+        if tok is None or tok.tokid != toktype or (max > 0 and len(out) >= max):
+            print 'appending', tok.dump()
+            out[-1].append(skeletons[i])
         else:
-            out[-1].append(elements[i])
+            if err is not None and len(out[-1]) == 0:
+                context.error(tok, err)
+                out.pop()
+
+            out.append([])
+
+        last_tok = tok
+
+    if err is not None and len(out[-1]) == 0:
+        context.error(last_tok, err)
+        out.pop()
 
     return out
+
 
 def get_tok(skel):
     if not skel.matches_tag(token_sym, 1):
@@ -254,3 +344,35 @@ def seq_contains(seq, toktype):
             return True
 
     return False
+
+def list_contains(list, toktype):
+    for e in list:
+        tok = get_tok(e)
+        if tok is not None and tok.tokid == toktype:
+            return True
+
+    return False
+
+def find_token(list, toktype):
+    (_, token) = find_token_indexed(list, toktype)
+    return token
+
+def find_token_indexed(list, toktype):
+    for (i, e) in enumerate(list):
+        tok = get_tok(e)
+        if tok is not None and tok.tokid == toktype:
+            return (i, tok)
+
+    return (-1, None)
+
+def try_split(list, toktype):
+    (index, token) = find_token_indexed(list, toktype)
+
+    if token is not None:
+        return (token, list[0:index], list[index:len(list)])
+    else:
+        return (None, None, None)
+
+def is_tok(skel, toktype):
+    tok = get_tok(skel)
+    return tok is not None and tok.tokid == toktype

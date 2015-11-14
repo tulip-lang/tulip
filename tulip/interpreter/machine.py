@@ -29,7 +29,7 @@ class MachineContext():
 
     def __init__(self, ast):
         self.cycle   = 0 # iteration count
-        self.program = bindingTest # test program slot
+        self.program = ast
         self.bindings = dict()
 
         print ansi_blue + "ast in: "

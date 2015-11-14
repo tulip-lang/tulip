@@ -41,7 +41,10 @@ def run_repl():
         try:
             lines.append(readline(prompt))
             code = u'\n'.join(lines)
-            print compile_base(parse_skeleton(ReaderLexer(StringReader(u'<repl>', code)))).dump()
+            ast = compile_base(parse_skeleton(ReaderLexer(StringReader(u'<repl>', code))))
+            print ast.dump()
+            # MachineContext(ast).step(1)
+
             lines = []
         except UnmatchedError as e:
             last_unmatched = e.token
@@ -53,6 +56,8 @@ def run_repl():
             print e.dump()
         except EOFError:
             break
+        # except StandardError as e:
+        #     print e
         finally:
             if last_unmatched is None:
                 lines = []

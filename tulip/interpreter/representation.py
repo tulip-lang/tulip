@@ -120,7 +120,7 @@ class Literal(Node):
     def __init__(self, value):
         self.value = value
     def show(self):
-        return "<literal %s>" % self.value
+        return "<literal %s>" % self.value.dump()
 
 class Name(Node):
     def __init__(self, scope, name):

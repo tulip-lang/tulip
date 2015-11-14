@@ -6,7 +6,8 @@ from tulip.interpreter.scope import *
 # it may be a little confusing, and i would advise you look out the abstract machine documentation for more precise details
 
 def expand(node, bindings, program):
-
+    print program.show()
+    print 'node', node
     # expressions
 
     # if isinstance(program[node], Block):

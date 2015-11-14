@@ -81,6 +81,20 @@ class Token:
 for i in range(len(Token.TOKENS)):
     setattr(Token, Token.TOKENS[i], r_uint(i))
 
+class DummyToken(Token):
+    def __init__(self, tokid, value):
+        self.tokid = tokid
+        self.value = value
+
+    def is_before(self, other):
+        return False
+
+    def dump(self):
+        if self.value is None:
+            return self.get_name()
+        else:
+            return u'%s(%s)' % (self.get_name(), self.value)
+
 class LocRange(object):
     def __init__(self, start, end):
         self.start = start
@@ -176,6 +190,7 @@ class ReaderLexer(Lexer):
     def current_location(self):
         return Location(self.reader.input_name(), self.index, self.line, self.col)
 
+
     def advance(self):
         assert self.uninitialized or self.head is not None, u"can't advance past the end!"
 
@@ -246,7 +261,6 @@ class ReaderLexer(Lexer):
             elif self.head in [u'\r', u'\n', u';']:
                 self.advance()
             else:
-                self._advance_through_ws()
                 break
 
     def record_ident(self):

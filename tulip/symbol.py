@@ -9,6 +9,9 @@ class Symbol(object):
     def hash(self):
         return self.id
 
+    def dump(self):
+        return '<sym %s/%d>' % (self.name, self.id)
+
 class SymbolTable(object):
     def __init__(self):
         self.table = {}

@@ -1,5 +1,5 @@
-import tulip.code
-from tulip.interpreter.scope import *
+import tulip.code as ast
+from tulip.interpreter.scope import Scope
 
 # CAUTION BIG FILE
 
@@ -21,25 +21,25 @@ def preprocess(program, bindings):
 def flatten(node, program, bindings, scope):
     id = newNode()
 
-    if isinstance(node, tulip.code.Block):
+    if isinstance(node, ast.Block):
         s = newScope()
         bindings[s] = Scope(s, scope)
         scope = s
         program[id] = Block(scope, [flatten(x, program, bindings, scope) for x in node.nodes])
-    elif isinstance(node, tulip.code.Apply):
+    elif isinstance(node, ast.Apply):
         program[id] = Apply(scope, [flatten(x, program, bindings, scope) for x in node.nodes])
-    elif isinstance(node, tulip.code.Let):
+    elif isinstance(node, ast.Let):
         program[id] = Let(scope, Name(scope, node.bind.symbol), flatten(node.body, program, bindings, scope))
-    elif isinstance(node, tulip.code.Lambda):
+    elif isinstance(node, ast.Lambda):
         s = newScope()
         bindings[s] = Scope(s, scope)
         scope = s
         program[id] = Lambda(scope, Name(scope, node.bind.symbol), flatten(node.body, program, bindings, scope))
-    elif isinstance(node, tulip.code.Name):
+    elif isinstance(node, ast.Name):
         program[id] = Name(scope, node.symbol)
-    elif isinstance(node, tulip.code.Constant):
+    elif isinstance(node, ast.Constant):
         program[id] = Literal(node.value)
-    elif isinstance(node, tulip.code.Builtin):
+    elif isinstance(node, ast.Builtin):
         program[id] = Builtin(scope, node.name, node.arity, [flatten(x, program, bindings, scope) for x in node.args])
 
     return id
@@ -131,7 +131,8 @@ class Name(Node):
 
 class Tag(Node):
     def __init__(self, tag):
-        self.tag = tag
+        self.tag = tag # String
+        self.contents = None # [Ref Node], must be constructed by tag application
 
 class Builtin(Node):
     def __init__(self, scope, name, arity, args):
@@ -147,13 +148,11 @@ class Builtin(Node):
 ########################################
 # internal utilities
 
+# todo make id generation part of a machine context state
+
 id_node = -1
 id_scope = -1
-# check out this sweet global state
-# ideally this would be replaced with some more sensible method of managing my fake heap
-# but that's probably not necessary
 
-# update: that is necessary, rpython *hates* this bit
 def newNode():
     global id_node
     id_node = id_node + 1

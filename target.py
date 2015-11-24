@@ -8,6 +8,8 @@ from tulip.reader import StringReader, FileReader
 from tulip.skeleton import parse_skeleton, ParseError
 from tulip.interpreter.machine import MachineContext
 
+import tulip.tests.runtime as tests
+
 def entry_point(argv):
     if len(argv) >= 2:
         return run_file(argv[1])
@@ -36,8 +38,8 @@ def run_repl():
 # temporary debugging target
 def run_machine():
     print_logo()
-    machine = MachineContext(None)
-    machine.step(1)
+    machine = MachineContext(tests.apply)
+    machine.run();
     return 0
 
 def print_logo():

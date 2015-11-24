@@ -4,7 +4,7 @@ class Scope(dict):
         self.parent = parent # Ref Scope
 
     def show(self):
-        o = "----[scope table " + str(self.id) + "]---------\n"
+        o = "----[scope table " + str(self.id) + "]-----------\n"
         o = o + "up: #" + str(self.parent) + "\n"
         for k,v in self.items():
             o = o + k + ": @" + str(v) + "\n"

@@ -46,7 +46,7 @@ def expand(node, state):
     if isinstance(program[node], core.Name):
         v = scope.lookup(program[node].name, program[node].scope, bindings)
         if v is not None:
-            program[node] = program[v]
+            state.program[node] = program[v]
 
     if isinstance(program[node], core.Tag):
         for v in program[node].contents:
@@ -54,10 +54,9 @@ def expand(node, state):
 
     if isinstance(program[node], core.Builtin):
         for v in program[node].args:
-            bindings, program = expand(v, bindings, program)
             state = expand(v, state)
 
-    return MachineState(bindings, program, register)
+    return state
 
 def reduce(node, state):
 
@@ -87,25 +86,25 @@ def reduce(node, state):
         if len(program[node].chain) == 1:
             # destructive reduction
             # program[node] = program[program[node].chain[0]]
-            register = program[program[node].chain[0]]
+            state.register = program[program[node].chain[0]]
         else:
             # set the register to n+1, then reduce n
             for n in range(0, len(program[node].chain) - 1):
                 # state = reduce(program[node].chain[n + 1])
                 # xxx [question] how do i implement eager semantics? im worried a forward reduction will break with higher-order functions
-                register = program[program[node].chain[n + 1]]
+                state.register = program[program[node].chain[n + 1]]
                 state = reduce(program[node].chain[n], state)
 
     if isinstance(program[node], core.Let):
         state = reduce(program[node].body, state)
-        bindings[program[node].scope].update({program[node].bind.name: program[node].body})
+        state.bindings[program[node].scope].update({program[node].bind.name: program[node].body})
 
     # lambda reduction coordinates with apply, binds the apply argument to the lambda name, expands & reduces the lambda body with that name bound
-    if isinstance(program[node], core.Lambda):
-        return
+    # if isinstance(program[node], core.Lambda):
+    #    return
 
     if isinstance(program[node], core.Branch):
-        bindings, program = branch(program[node], bindings, program);
+        state = branch(program[node], bindings, program);
 
     ########################################
     # values
@@ -122,10 +121,10 @@ def reduce(node, state):
 
     # if isinstance(program[node], Builtin):
 
-    return MachineState(bindings, program, register)
+    return state
 
 def branch(node, state):
-    return (bindings, program)
+    return state
 
 # def concur(node, state):
 #     return

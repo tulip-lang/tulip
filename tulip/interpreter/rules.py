@@ -78,7 +78,7 @@ def reduce(node, state):
     if isinstance(state.program[node], core.Apply):
         # single-argument apply is precluded by the compiler, and has no semantics
         if len(state.program[node].chain) == 1:
-            assert True, "malformed apply"
+            assert False, "malformed apply"
 
         # eagerly evaluate arguments
         for v in state.program[node].chain[1:]:
@@ -114,7 +114,7 @@ def reduce(node, state):
         if v is not None:
             state.registers[node] = v
         else:
-            assert True, "name not found: " + state.program[node].name
+            assert False, "name not found: " + state.program[node].name
 
     # todo tag construction
     if isinstance(state.program[node], core.Tag):
@@ -131,11 +131,11 @@ def reduce(node, state):
                 if b["check"](args):
                     state.registers[node] = b["definition"](args)
                 else:
-                    assert True, "type mismatch in builtin call"
+                    assert False, "type mismatch in builtin call"
             else:
-                assert True, "builtin called with wrong number of arguments"
+                assert False, "builtin called with wrong number of arguments"
         else:
-            assert True, "builtin not found"
+            assert False, "builtin not found"
 
 
     return state
@@ -150,7 +150,7 @@ def branch(node, state):
             state.registers[node] = state.registers[c]
             return state
 
-        assert True, "failed branch"
+        assert False, "failed branch"
 
 # def concur(node, state):
 #     return

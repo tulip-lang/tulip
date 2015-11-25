@@ -1,15 +1,15 @@
-from tulip.code import *
+import tulip.interpreter.lang as core
 
-builtins = {}
+dispatch = {}
 
 # *shrugs* i wanted to fold a predicate but
 def allNumbers(list):
     for i in list:
-        if isinstance(i, Constant) and isinstance(i.value, (int, long, float)):
+        if isinstance(i, core.Constant) and isinstance(i.value, (int, long, float)):
             continue
         else:
             return False
     return True
 
-builtins["+"] = {"arity": 2, "definition": (lambda xs: xs[0].value + xs[1].value), "check": allNumbers}
-builtins["-"] = {"arity": 2, "definition": (lambda xs: xs[0].value - xs[1].value), "check": allNumbers}
+dispatch["+"] = {"arity": 2, "definition": (lambda xs: xs[0].value + xs[1].value), "check": allNumbers}
+dispatch["-"] = {"arity": 2, "definition": (lambda xs: xs[0].value - xs[1].value), "check": allNumbers}

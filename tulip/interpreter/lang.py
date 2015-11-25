@@ -17,7 +17,6 @@ def preprocess(program, bindings):
     flatten(program, flattened, bindings, scope)
     return (flattened, bindings)
 
-# Node -> [Ref Node] -> [Ref Scope] -> Ref Scope -> Ref
 def flatten(node, program, bindings, scope):
     id = newNode()
 
@@ -35,8 +34,17 @@ def flatten(node, program, bindings, scope):
         bindings[s] = Scope(s, scope)
         scope = s
         program[id] = Lambda(scope, Name(scope, node.bind.symbol), flatten(node.body, program, bindings, scope))
+    elif isinstance(node, ast.Branch):
+        ps = list()
+        cs = list()
+        for (p, c) in node.clauses:
+            ps.append(flatten(p, program, bindings, scope))
+            cs.append(flatten(c, program, bindings, scope))
+        program[id] = Branch(scope, ps, cs)
     elif isinstance(node, ast.Name):
         program[id] = Name(scope, node.symbol)
+    elif isinstance(node, ast.Tag):
+        program[id] = Tag(node.symbol)
     elif isinstance(node, ast.Constant):
         program[id] = Literal(node.value)
     elif isinstance(node, ast.Builtin):
@@ -67,7 +75,7 @@ class Program(dict):
 
 class Node:
     def __init__(self):
-        return
+       return
 
 # expressions
 
@@ -112,7 +120,7 @@ class Branch(Node):
         self.scope = scope # Ref Scope
 
     def show(self):
-        assert True, "not impl"
+        return "<branch %s>" % ' '.join(["[@" + str(p) + " => @" + str(c) + "]" for p, c in zip(self.predicates, self.consequences)])
 
 # values
 
@@ -133,6 +141,11 @@ class Tag(Node):
     def __init__(self, tag):
         self.tag = tag # String
         self.contents = None # [Ref Node], must be constructed by tag application
+    def show(self):
+        return "<tag %s>" % self.tag
+    # todo tag equality should count contents
+    def __eq__(self, other):
+        return self.tag == other.tag
 
 class Builtin(Node):
     def __init__(self, scope, name, arity, args):

@@ -36,7 +36,7 @@ class MachineContext():
         self.dump()
         print
 
-        print "execution finished"
+        print "execution finished, program returned: " + self.state.registers[0].show()
 
 
     def halt(self):
@@ -44,15 +44,14 @@ class MachineContext():
         assert False, "DO NOT IMPLEMENT CONCURRENCY YET"
 
     def dump(self):
-        """printss all context internal state for debugging"""
+        """printss all context internal state for debugging """
 
         print self.state.program.show()
 
         for _,v in self.state.bindings.items():
             print v.show()
 
-        if self.state.register is not None:
-            print "returned: " + self.state.register.show()
+        print self.state.registers.show()
 
 ansi_blue = "\033[94m"
 ansi_green = "\033[92m"

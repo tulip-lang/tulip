@@ -31,8 +31,8 @@ class MachineContext():
 
         print ansi_white + "program stdout:"
 
-        self.state = rules.expand(0, self.state)
-        self.state = rules.reduce(0, self.state)
+        rules.expand(0, self.state)
+        rules.reduce(0, self.state)
 
         print
         print ansi_green + "output state:"

@@ -29,14 +29,18 @@ class MachineContext():
     def run(self):
         """runtime test scaffolding, evaluates some expression until it is fully reduced"""
 
+        print ansi_white + "program stdout:"
+
         self.state = rules.expand(0, self.state)
         self.state = rules.reduce(0, self.state)
 
-        print ansi_green + "output state: "
+        print
+        print ansi_green + "output state:"
+
         self.dump()
         print
 
-        print "execution finished, program returned: " + self.state.registers[0].show()
+        print ansi_white + "execution finished, program returned: " + self.state.registers[0].show()
 
 
     def halt(self):
@@ -55,3 +59,5 @@ class MachineContext():
 
 ansi_blue = "\033[94m"
 ansi_green = "\033[92m"
+ansi_white = "\033[97m"
+ansi_default = "\033[99m"

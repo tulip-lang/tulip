@@ -124,8 +124,12 @@ def reduce(node, state):
         b = builtins.dispatch[state.program[node].name]
         if b is not None:
             if b["arity"] == state.program[node].arity:
-                if b["check"](state.program[node].args):
-                    state.registers[node] = b["definition"](state.program[node].args)
+                args = list()
+                for v in state.program[node].args:
+                    state = reduce(v, state)
+                    args.append(state.registers[v])
+                if b["check"](args):
+                    state.registers[node] = b["definition"](args)
                 else:
                     assert True, "type mismatch in builtin call"
             else:

@@ -38,7 +38,7 @@ def run_repl():
 # temporary debugging target
 def run_machine():
     print_logo()
-    machine = MachineContext(tests.branch)
+    machine = MachineContext(tests.builtin)
     machine.run();
     return 0
 

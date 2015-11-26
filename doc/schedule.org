@@ -1,0 +1,23 @@
+* SCHEDULE
+** abstract machine
+*** flat format
+**** TODO add Scope insertion to block and lambda
+*** rules
+**** TODO expand
+**** TODO reduce
+**** TODO branch
+* NOTES
+** abstract machine
+*** bindings
+- there are no cases where tags need to be bound
+- scopes also need to be deleted sometime, but we may need the process model to do that reliably -- dunno really i'm pretty sleepy
+- lets in blocks are bound sequentially (NOT EARLY)
+- jneen wants lambda to introduce a new scope, which makes sense but might require reworking the symbol tables
+- she also wants new scopes for each case alternative, motivated by her planned translation of pattern matching
+*** builtins
++
+-
+*
+/
+print
+pretty printing

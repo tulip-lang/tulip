@@ -49,6 +49,9 @@ class Token:
         self.value = value
         self.loc_range = loc_range
 
+    def get_name(self):
+        return Token.TOKENS[self.tokid]
+
     def is_before(self, other):
         return self.loc_range.start.index < other.loc_range.start.index
 
@@ -58,11 +61,39 @@ class Token:
         else:
             return u'%s%s(%s)' % (self.loc_range.dump(), Token.TOKENS[self.tokid], self.value)
 
+    # tokens that eat the *preceding* newline
+    def eats_preceding_newline(self):
+        return self.tokid in [
+            Token.GT,
+            Token.RARROW,
+            Token.EQ,
+            Token.COMMA,
+            Token.PIPE,
+            Token.QUESTION,
+
+            Token.RBRACK,
+            Token.RBRACE
+        ]
+
     def is_eof(self):
         return self.tokid == Token.EOF
 
 for i, tokname in enumerate(Token.TOKENS):
     setattr(Token, tokname, r_uint(i))
+
+class DummyToken(Token):
+    def __init__(self, tokid, value):
+        self.tokid = tokid
+        self.value = value
+
+    def is_before(self, other):
+        return False
+
+    def dump(self):
+        if self.value is None:
+            return self.get_name()
+        else:
+            return u'%s(%s)' % (self.get_name(), self.value)
 
 class LocRange(object):
     def __init__(self, start, end):
@@ -129,6 +160,7 @@ class ReaderLexer(Lexer):
         self.tape = None
         self.recording = False
         self.uninitialized = True
+        self._peek = None
 
     def error(self, message):
         raise LexError(self, message)
@@ -157,6 +189,7 @@ class ReaderLexer(Lexer):
 
     def current_location(self):
         return Location(self.reader.input_name(), self.index, self.line, self.col)
+
 
     def advance(self):
         assert self.uninitialized or self.head is not None, u"can't advance past the end!"
@@ -191,6 +224,11 @@ class ReaderLexer(Lexer):
         return self._final_loc or self.current_location()
 
     def next(self):
+        if self._peek is not None:
+            peek = self._peek
+            self._peek = None
+            return peek
+
         self.reset()
         start = self.current_location()
         token = self.process_root()
@@ -198,6 +236,12 @@ class ReaderLexer(Lexer):
         end = self.final_loc()
         assert (token == Token.EOF or self.index != start.index), u'must advance the stream!'
         return Token(token, value, LocRange(start, end))
+
+    def peek(self):
+        if self._peek is None:
+            self._peek = self.next()
+
+        return self._peek
 
     def skip_ws(self):
         self.end_loc()
@@ -348,10 +392,7 @@ class ReaderLexer(Lexer):
 
         if self.head == u'-':
             self.advance()
-            if is_ws(self.head) or self.head is None:
-                self.skip_ws()
-                return Token.DASH
-            else:
+            if is_ident_char(self.head):
                 self.record_ident()
                 if self.head == u':':
                     self.advance()
@@ -360,6 +401,9 @@ class ReaderLexer(Lexer):
                 else:
                     self.skip_ws()
                     return Token.FLAG
+            else:
+                self.skip_ws()
+                return Token.DASH
 
         if self.head == u':':
             self.advance()

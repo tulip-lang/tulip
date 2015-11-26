@@ -1,8 +1,17 @@
+@object Reply pid id [
+  reply msg = Prelude/send pid (id, msg)
+  receive f = Prelude/receive [ (_ ? eq id, x) => f x ]
+  receive! = receive [ x => x ]
+  send msg = Prelude/send (id, msg)
+]
+
+make-reply! = Reply self! make-id!
+
 # prelude.tlp
 send-wait pid msg = {
-  id = make-id!
-  send pid (self!, id, msg)
-  receive [ (_ ? eq id), x => x ]
+  r = make-reply!
+  send pid (r, msg)
+  r/receive!
 }
 
 # ref.tlp
@@ -12,12 +21,18 @@ ref value = Ref (spawn [ ! => loop value ])
 
 loop value = receive [
   .set new-value => loop new-value
-  p, id, .get => { send p (id, value); loop value }
+  r, .get => { r/reply value; loop value }
+  r, .modify f =>
+     try f value
+     > tee r/reply
+     > [ .some new-value => loop new-value; .none => loop value ]
+  ]
 ]
 
 @object Ref pid [
   set val = .set val > send pid
   get! = .get > send-wait pid
+  modify f = .modify f > send-wait pid
 ]
 
 # repl
@@ -29,3 +44,7 @@ loop value = receive [
 = .ok
 : r/get!
 = 20
+: r/modify (add 10)
+= .ok
+: r/modify [ (x: %str) => '{it's a string} ]
+= .ok

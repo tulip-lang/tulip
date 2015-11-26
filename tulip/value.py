@@ -4,6 +4,9 @@ import tulip.lexer as L
 class MalformedValue(ValueError):
     pass
 
+def malformed(message):
+    raise MalformedValue(message)
+
 class Value(object):
     def dump(self):
         assert False, 'abstract'
@@ -38,6 +41,18 @@ class String(Value):
 
     def matches_type(self, name):
         return name == string_sym
+
+    def dump(self):
+        return u"'{%s}" % self.value
+
+class Bang(Value):
+    def __init__(self):
+        pass
+
+    def dump(self):
+        return u'!'
+
+bang = Bang()
 
 class Callable(Value):
     def arity(self):

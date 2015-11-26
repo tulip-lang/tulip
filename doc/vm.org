@@ -1,0 +1,107 @@
+* introduction
+hi! in here's an abstract machine that can evaluate tulip and languages like it
+it has five instructions
+each instruction operates on the program in a reduced AST form, which is detailed below
+this machine doesn't include a data model or heap strategies, it really just directs control flow
+* rationale
+rpython's path prediction actually works better for abstract machines than it does for traditional bytecodes
+[[http:homes.soic.indiana.edu/samth/pycket-draft.pdf][more information in this paper on pycket's implementation study]]
+* notation
+** ast
+- (x | y) denotes an choice
+- (x , y) denotes a pair
+- [x]     denotes a list
+- :=      denotes a definition
+- multiple items denotes a sequence
+
+let's pretend these are valid types
+** instructions
+like haskell, but vague
+* ast
+the abstract machine's instruction operate on the program's structure instead of its data, because functional
+before execution tulip is "compiled" into a slightly simpler ast form, the nodes of which are documented here
+** pattern
+pattern-matching control flow structure
+associates an expression (a Block) with a pattern (an Apply that returns a bool)
+*** note
+patterns /could/ be represented as complicated apply chains, but they would be slower to evaluate
+*** pseudocode
+Pattern := Let [(Apply, Block)]
+** apply
+an application of a function or a tag to some arguments
+*** pseudocode
+Apply := (Name | Tag) [(Name | Tag | Apply)]
+** block
+a linear control flow sequence
+can recurse into another block
+*** pseudocode
+Block := [(Apply | Block)]
+** name
+wraps a string
+** tag
+wraps a string
+** let
+binds some value to a name
+*** pseudocode
+Let := Name (Block | Pattern)
+** value
+intermediate result of execution
+*** note
+tulip's first type system will probably just abstract rpython's numbers and strings
+*** pseudocode
+Value := undefined
+* "instructions"
+** branch
+branch traverses a ML-like case control structure
+it evaluates each pattern predicate successively
+patterns return a boolean value, if true branch evaluates the corresponding expression and returns its value
+*** care
+pattern needs to return a boolean, but not necessarily a tulip boolean
+*** pseudocode
+branch :: [(Apply, Block)] -> Value
+branch [(p,e):xs] = if (evaluate p) then (evaluate e) else (branch xs)
+** reduce
+reduce coerces part of a program into a value, lazily
+*** care
+reduce needs to drop into to python code for builtins
+this is "slow" in the sense that it breaks a hot path in most case
+*** pseudocode
+reduce :: expression -> value
+reduce e = 
+** expand
+expand performs one pass of definition substitution
+not practically of course, it just swaps some references when it needs to
+but semantically it 'invokes' the function by dumping its source
+*** technical
+expand includes 
+*** care
+expand "primes" an application, but does not complete it
+some clever heap strategies could use this on its own, especially around binding forms
+i am too drunk to think through how that would actually work
+*** pseudocode
+expand :: 
+expand n = 
+** "evaluate"
+expand, and then reduce
+if called on a block, repeat
+evaluate disregards all results except the last, which it returns
+*** care
+evaluate 
+*** technical
+this is the beta expansion
+the distinction between expand and reduce is intended to help rpython go fast
+*** pseudocode
+evaluate :: Block -> Value
+evaluate [n:[]] = expand n >>= reduce
+evaluate [n:xs] = expand n >>= reduce >> evaluate xs 
+** concur
+concur instantiates a new execution context, and returns a reference to that context
+this doesn't need to be implemented immediately
+** confer
+confer passes a value from one execution context to another
+this also shouldn't be implemented yet
+* what to target
+the "executable format" of tulip is the reduced source, fitting with the ast description above
+the rules of execution follow from its structure and an initial instruction
+a normal executable could be a program and an evaluate instruction
+or it could be a pattern and a branch over some input

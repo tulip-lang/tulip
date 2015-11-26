@@ -9,6 +9,8 @@ from tulip.skeleton import parse_skeleton, UnmatchedError, ParseError
 from tulip.interpreter.machine import MachineContext
 from tulip.compiler import compile_base, CompileError
 
+import tulip.tests.runtime as tests
+
 def entry_point(argv):
     if len(argv) >= 2:
         return run_file(argv[1])
@@ -67,8 +69,8 @@ def run_repl():
 # temporary debugging target
 def run_machine():
     print_logo()
-    machine = MachineContext(None)
-    machine.step(1)
+    machine = MachineContext(tests.longtag)
+    machine.runVerbose();
     return 0
 
 def print_logo():

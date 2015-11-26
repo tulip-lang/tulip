@@ -1,5 +1,5 @@
-import tulip.code
-from tulip.interpreter.scope import *
+import tulip.code as ast
+from tulip.interpreter.scope import Scope
 
 # CAUTION BIG FILE
 
@@ -17,29 +17,37 @@ def preprocess(program, bindings):
     flatten(program, flattened, bindings, scope)
     return (flattened, bindings)
 
-# Node -> [Ref Node] -> [Ref Scope] -> Ref Scope -> Ref
 def flatten(node, program, bindings, scope):
     id = newNode()
 
-    if isinstance(node, tulip.code.Block):
+    if isinstance(node, ast.Block):
         s = newScope()
         bindings[s] = Scope(s, scope)
         scope = s
         program[id] = Block(scope, [flatten(x, program, bindings, scope) for x in node.nodes])
-    elif isinstance(node, tulip.code.Apply):
+    elif isinstance(node, ast.Apply):
         program[id] = Apply(scope, [flatten(x, program, bindings, scope) for x in node.nodes])
-    elif isinstance(node, tulip.code.Let):
+    elif isinstance(node, ast.Let):
         program[id] = Let(scope, Name(scope, node.bind.symbol), flatten(node.body, program, bindings, scope))
-    elif isinstance(node, tulip.code.Lambda):
+    elif isinstance(node, ast.Lambda):
         s = newScope()
         bindings[s] = Scope(s, scope)
         scope = s
         program[id] = Lambda(scope, Name(scope, node.bind.symbol), flatten(node.body, program, bindings, scope))
-    elif isinstance(node, tulip.code.Name):
+    elif isinstance(node, ast.Branch):
+        ps = list()
+        cs = list()
+        for (p, c) in node.clauses:
+            ps.append(flatten(p, program, bindings, scope))
+            cs.append(flatten(c, program, bindings, scope))
+        program[id] = Branch(scope, ps, cs)
+    elif isinstance(node, ast.Name):
         program[id] = Name(scope, node.symbol)
-    elif isinstance(node, tulip.code.Constant):
+    elif isinstance(node, ast.Tag):
+        program[id] = Tag(node.symbol)
+    elif isinstance(node, ast.Constant):
         program[id] = Literal(node.value)
-    elif isinstance(node, tulip.code.Builtin):
+    elif isinstance(node, ast.Builtin):
         program[id] = Builtin(scope, node.name, node.arity, [flatten(x, program, bindings, scope) for x in node.args])
 
     return id
@@ -67,7 +75,7 @@ class Program(dict):
 
 class Node:
     def __init__(self):
-        return
+       return
 
 # expressions
 
@@ -112,7 +120,7 @@ class Branch(Node):
         self.scope = scope # Ref Scope
 
     def show(self):
-        assert True, "not impl"
+        return "<branch %s>" % ' '.join(["[@" + str(p) + " => @" + str(c) + "]" for p, c in zip(self.predicates, self.consequences)])
 
 # values
 
@@ -131,7 +139,16 @@ class Name(Node):
 
 class Tag(Node):
     def __init__(self, tag):
-        self.tag = tag
+        self.tag = tag # String
+        self.contents = list() # [Node], must be constructed by tag application
+    def show(self):
+        if len(self.contents) > 0:
+            return "<tag " + self.tag + " [" + ' '.join(c.show() for c in self.contents) + "]>"
+        else:
+            return "<tag %s>" % self.tag
+    # todo tag equality should count contents
+    def __eq__(self, other):
+        return self.tag == other.tag
 
 class Builtin(Node):
     def __init__(self, scope, name, arity, args):
@@ -147,13 +164,11 @@ class Builtin(Node):
 ########################################
 # internal utilities
 
+# todo make id generation part of a machine context state
+
 id_node = -1
 id_scope = -1
-# check out this sweet global state
-# ideally this would be replaced with some more sensible method of managing my fake heap
-# but that's probably not necessary
 
-# update: that is necessary, rpython *hates* this bit
 def newNode():
     global id_node
     id_node = id_node + 1

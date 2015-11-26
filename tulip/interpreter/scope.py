@@ -1,16 +1,18 @@
 class Scope(dict):
     def __init__(self, id, parent):
-        self.id = id # Ref Scope
-        self.parent = parent # Ref Scope
+        self.id = id
+        self.parent = parent
 
     def show(self):
-        o = "----[scope table " + str(self.id) + "]---------\n"
+        o = "----[scope table " + str(self.id) + "]-----------\n"
         o = o + "up: #" + str(self.parent) + "\n"
         for k,v in self.items():
-            o = o + k + ": @" + str(v) + "\n"
+            if isinstance(v, int):
+                o = o + k + ": @" + str(v) + "\n"
+            else:
+                o = o + k + ": " + v.show() + "\n"
         return o
 
-    # Name -> Node -> ()
     def __setitem__(self, k, v):
         dict.__setitem__(self, k, v)
 

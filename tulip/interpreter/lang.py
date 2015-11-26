@@ -140,9 +140,12 @@ class Name(Node):
 class Tag(Node):
     def __init__(self, tag):
         self.tag = tag # String
-        self.contents = None # [Ref Node], must be constructed by tag application
+        self.contents = list() # [Node], must be constructed by tag application
     def show(self):
-        return "<tag %s>" % self.tag
+        if len(self.contents) > 0:
+            return "<tag " + self.tag + " [" + ' '.join(c.show() for c in self.contents) + "]>"
+        else:
+            return "<tag %s>" % self.tag
     # todo tag equality should count contents
     def __eq__(self, other):
         return self.tag == other.tag

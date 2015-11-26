@@ -9,3 +9,6 @@ builtin = Apply([Lambda(Name("x"), Builtin("print", 1, [Name("x")])), Constant("
 apply = Apply([Lambda(Name("x"), Name("x")), Constant(5)])
 
 branch = Branch([(Tag("t"), Constant(5))])
+
+tag = Apply([Tag("some"), Constant("string")])
+longtag = Apply([Tag("cons"), Constant("string"), Tag("nil")])

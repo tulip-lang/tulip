@@ -14,9 +14,6 @@ class MachineContext():
         self.cycle   = 0 # iteration count
         self.state = MachineState.fromProgram(ast)
 
-        print ansi_blue + "input state: "
-        self.dump()
-        print
 
     def step(self,n):
         """performs n iterations of the interpreter loop"""
@@ -27,7 +24,17 @@ class MachineContext():
         """runs the interpreter loop until program yields"""
 
     def run(self):
-        """runtime test scaffolding, evaluates some expression until it is fully reduced"""
+        rules.expand(0, self.state)
+        rules.reduce(0, self.state)
+
+        print ansi_green + self.state.registers[0].show()
+
+    def runVerbose(self):
+        """evaluates some expression until it is fully reduced, temporary testing"""
+
+        print ansi_blue + "input state: "
+        self.dump()
+        print
 
         print ansi_white + "program stdout:"
 
@@ -41,7 +48,6 @@ class MachineContext():
         print
 
         print ansi_white + "execution finished, program returned: " + self.state.registers[0].show()
-
 
     def halt(self):
         """prematurely stops evaluation in this context"""

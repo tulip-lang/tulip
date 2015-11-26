@@ -28,7 +28,6 @@ def expand(node, state):
         expand(state.program[node].body, state)
 
     # a lambda's argument can only be expanded during reduction
-    # todo figured out how name expansion can be avoided in this case
     if isinstance(state.program[node], core.Lambda):
         expand(state.program[node].body, state)
 
@@ -73,6 +72,11 @@ def reduce(node, state):
         else:
             state.registers[node] = None
 
+        # discard intermediate results
+        for v in state.program[node].sequence:
+            if state.registers.has_key(v):
+                del state.registers[v]
+
     if isinstance(state.program[node], core.Apply):
         # single-argument apply is precluded by the compiler, and has no semantics
         if len(state.program[node].chain) == 1:
@@ -91,6 +95,9 @@ def reduce(node, state):
     if isinstance(state.program[node], core.Let):
         reduce(state.program[node].body, state)
         state.bindings[state.program[node].scope].update({state.program[node].bind.name: state.program[node].body})
+        # clean up registers
+        if state.registers.has_key(state.program[node].body):
+            del state.registers[state.program[node].body]
 
     # lambda argument should already be in register from apply
     if isinstance(state.program[node], core.Lambda):
@@ -114,8 +121,12 @@ def reduce(node, state):
         else:
             assert False, "name not found: " + state.program[node].name
 
-    # todo tag construction
     if isinstance(state.program[node], core.Tag):
+        if state.registers.has_key(node):
+            # tag has arguments
+            # xxx [question] i'm not sure if i need to construct a new tag here, instead of permuting the program
+            # i think the eager semantics might just permit modification in place
+            state.program[node].contents.append(state.registers[node])
         state.registers[node] = state.program[node]
 
     if isinstance(state.program[node], core.Builtin):

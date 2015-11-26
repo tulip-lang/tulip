@@ -38,8 +38,8 @@ def run_repl():
 # temporary debugging target
 def run_machine():
     print_logo()
-    machine = MachineContext(tests.builtin)
-    machine.run();
+    machine = MachineContext(tests.longtag)
+    machine.runVerbose();
     return 0
 
 def print_logo():

@@ -13,11 +13,10 @@ class MachineState():
         self.program = program     # tree of core lang nodes
         self.registers = registers # sparse map of node refs to intermediate results
 
-    @staticmethod
-    def fromProgram(program):
-        s = MachineState(dict(), None, RegisterTable())
-        s.program, s.bindings = core.preprocess(program, s.bindings)
-        return s
+def fromProgram(program):
+    s = MachineState(dict(), None, RegisterTable())
+    s.program, s.bindings = core.preprocess(program, s.bindings)
+    return s
 
 class RegisterTable(dict):
     def __init__(self):

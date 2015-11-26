@@ -2,7 +2,7 @@
 
 import tulip.interpreter.lang  as lang
 import tulip.interpreter.rules as rules
-from tulip.interpreter.state import MachineState
+import tulip.interpreter.state as state
 
 class MachineContext():
     """
@@ -12,7 +12,7 @@ class MachineContext():
 
     def __init__(self, ast):
         self.cycle   = 0 # iteration count
-        self.state = MachineState.fromProgram(ast)
+        self.state = state.fromProgram(ast)
 
 
     def step(self,n):

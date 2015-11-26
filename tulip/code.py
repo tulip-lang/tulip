@@ -17,13 +17,12 @@ class Apply(Code):
         return u'<apply [%s]>' % u' '.join([e.dump() for e in self.nodes])
 
 class Lambda(Code):
-    def __init__(self, symbols, body):
-        self.symbols = symbols
+    def __init__(self, bind, body):
+        self.bind = bind
         self.body = body
 
     def dump(self):
-        symbols = u' '.join([s.name for s in self.symbols])
-        return u'<lambda [%s] %s>' % (symbols, self.body.dump())
+        return u'<lambda %s %s>' % (self.bind.name, self.body.dump())
 
 class Block(Code):
     def __init__(self, nodes):

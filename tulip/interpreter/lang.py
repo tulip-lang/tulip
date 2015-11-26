@@ -28,12 +28,12 @@ def flatten(node, program, bindings, scope):
     elif isinstance(node, ast.Apply):
         program[id] = Apply(scope, [flatten(x, program, bindings, scope) for x in node.nodes])
     elif isinstance(node, ast.Let):
-        program[id] = Let(scope, Name(scope, node.bind.symbol), flatten(node.body, program, bindings, scope))
+        program[id] = Let(scope, Name(scope, node.bind.name), flatten(node.body, program, bindings, scope))
     elif isinstance(node, ast.Lambda):
         s = newScope()
         bindings[s] = Scope(s, scope)
         scope = s
-        program[id] = Lambda(scope, Name(scope, node.bind.symbol), flatten(node.body, program, bindings, scope))
+        program[id] = Lambda(scope, Name(scope, node.bind.name), flatten(node.body, program, bindings, scope))
     elif isinstance(node, ast.Branch):
         ps = list()
         cs = list()
@@ -42,7 +42,7 @@ def flatten(node, program, bindings, scope):
             cs.append(flatten(c, program, bindings, scope))
         program[id] = Branch(scope, ps, cs)
     elif isinstance(node, ast.Name):
-        program[id] = Name(scope, node.symbol)
+        program[id] = Name(scope, node.symbol.name)
     elif isinstance(node, ast.Tag):
         program[id] = Tag(node.symbol)
     elif isinstance(node, ast.Constant):

@@ -7,7 +7,7 @@ from tulip.lexer import ReaderLexer, Token, LexError
 from tulip.reader import StringReader, FileReader
 from tulip.skeleton import parse_skeleton, UnmatchedError, ParseError
 from tulip.interpreter.machine import MachineContext
-from tulip.compiler import compile_base, CompileError
+from tulip.compiler import compile_base, CompileError, with_prelude
 
 import tulip.tests.runtime as tests
 
@@ -26,6 +26,7 @@ repl_char_map = {
     Token.LBRACK: u'[',
     Token.MACRO: u'['
 }
+
 def run_repl():
     print_logo()
 
@@ -45,7 +46,7 @@ def run_repl():
             code = u'\n'.join(lines)
             ast = compile_base(parse_skeleton(ReaderLexer(StringReader(u'<repl>', code))))
             print ast.dump()
-            # MachineContext(ast).step(1)
+            MachineContext(with_prelude(ast)).runVerbose()
 
             lines = []
         except UnmatchedError as e:

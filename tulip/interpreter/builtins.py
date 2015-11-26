@@ -1,6 +1,5 @@
 import tulip.interpreter.lang as core
-
-dispatch = {}
+import tulip.value as v
 
 # *shrugs* i wanted to fold a predicate but
 def allNumbers(list):
@@ -19,11 +18,32 @@ def literal(list):
             return False
     return True
 
-dispatch["+"] = {"arity": 2, "definition": (lambda xs: xs[0].value + xs[1].value), "check": allNumbers}
-dispatch["-"] = {"arity": 2, "definition": (lambda xs: xs[0].value - xs[1].value), "check": allNumbers}
-dispatch["print"] = {"arity": 1, "definition": (lambda xs: p(xs)), "check": literal}
+def no_check(_):
+    return True
 
-def p(xs):
-    for x in xs:
-        print x.value
-    return core.Tag("ok")
+dispatch = {}
+def builtin(arity, check=no_check):
+    def decorator(fn):
+        name = fn.__name__.replace('_', '-')
+        dispatch[name] = {
+          'arity': arity,
+          'definition': fn,
+          'check': check,
+          'name': name
+        }
+        return fn
+
+    return decorator
+
+
+@builtin(2, check=allNumbers)
+def add(args):
+    return c.Constant(v.Int(args[0].value + args[1].value))
+
+@builtin(2, check=allNumbers)
+def sub(args):
+    return c.Constant(v.Int(args[1].value - args[0].value))
+
+@builtin(1, check=literal)
+def p(args):
+    print args[0].value.dump()

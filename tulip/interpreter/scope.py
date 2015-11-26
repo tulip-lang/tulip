@@ -17,10 +17,14 @@ class Scope(dict):
         dict.__setitem__(self, k, v)
 
 def lookup(name, scope, bindings):
-    v = bindings[scope].get(name)
-    if v:
-        return v
-    elif bindings[scope].parent:
-        return lookup(bindings[bindings[scope].parent], name, bindings)
-    else:
-        return None
+    try:
+        return bindings[scope][name]
+    except KeyError:
+        print 'name', name
+        print 'scope', scope
+        print 'bindings', bindings
+        print
+        if bindings[scope].parent:
+            return lookup(bindings[bindings[scope].parent], name, bindings)
+        else:
+            return None

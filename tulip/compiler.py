@@ -248,7 +248,7 @@ def compile_expr(expr, context):
         body = c.Block(elements)
 
     if chain_lambda:
-        return c.Lambda([chain_sym], body)
+        return c.Lambda(chain_sym, body)
     else:
         return body
 
@@ -376,3 +376,26 @@ def try_split(list, toktype):
 def is_tok(skel, toktype):
     tok = get_tok(skel)
     return tok is not None and tok.tokid == toktype
+
+### [jneen] XXX HACK TODO: actually make a prelude ###
+import tulip.interpreter.builtins as b
+
+def builtin_let(builtin):
+    compiler = Compiler()
+    vars = [compiler.gensym('bvar') for _ in xrange(0, builtin['arity'])]
+    names = [c.Name(v) for v in vars]
+    builtin_call = c.Builtin(builtin['name'], builtin['arity'], names)
+
+    out = builtin_call
+    vars.reverse()
+    for v in vars:
+        out = c.Lambda(v, out)
+
+    return c.Let(sym(builtin['name']), out)
+
+prelude = map(builtin_let, b.dispatch.values())
+
+def with_prelude(expr):
+    return c.Block(prelude + [expr])
+
+### [jneen] END HACK ###

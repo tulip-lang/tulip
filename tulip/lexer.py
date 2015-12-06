@@ -27,6 +27,7 @@ class Token:
       u"UNDERSCORE",
       u"QUESTION",
       u"DASH",
+      u"DOT",
 
       u"AMP",
       u"FLAG",
@@ -459,9 +460,13 @@ class ReaderLexer(Lexer):
 
         if self.head == u'.':
             self.advance()
-            self.record_ident()
-            self.skip_ws()
-            return Token.TAGGED
+            if is_alpha(self.head):
+                self.record_ident()
+                self.skip_ws()
+                return Token.TAGGED
+            else:
+                self.skip_ws()
+                return Token.DOT
 
         if is_digit(self.head):
             self.record()

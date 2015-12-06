@@ -112,9 +112,6 @@ def cons_each(value):
         else:
             raise MalformedValue(u'rpy_list: bad cons-list')
 
-def tag(name, values):
-    return Tagged(sym(name), values)
-
 class Tagged(Callable):
     def __init__(self, symbol, args):
         self.symbol = symbol
@@ -146,6 +143,12 @@ class Tagged(Callable):
 
     def invoke(self, rt, argv):
         assert False, 'TODO'
+
+def tag(name, values):
+    return Tagged(sym(name), values)
+
+TRUE = tag(u't', [])
+FALSE = tag(u'f', [])
 
 # TODO
 class Pattern(Value):

@@ -16,6 +16,12 @@ class Apply(Code):
     def dump(self):
         return u'<apply [%s]>' % u' '.join([e.dump() for e in self.nodes])
 
+def make_apply(segments):
+    if len(segments) == 1:
+        return segments[0]
+    else:
+        return Apply(segments)
+
 class Lambda(Code):
     def __init__(self, bind, body):
         self.bind = bind
@@ -23,6 +29,15 @@ class Lambda(Code):
 
     def dump(self):
         return u'<lambda %s %s>' % (self.bind.name, self.body.dump())
+
+def nested_lambda(binders, body):
+    out = body
+    i = len(binders)
+    while i > 0:
+        i -= 1
+        out = Lambda(binders[i], out)
+
+    return out
 
 class Block(Code):
     def __init__(self, nodes):
@@ -51,7 +66,7 @@ class Tag(Code):
         self.symbol = symbol
 
     def dump(self):
-        return u'<tag .%s>' % self.symbol
+        return u'<tag .%s>' % self.symbol.name
 
 class Flag(Code):
     def __init__(self, symbol):
@@ -75,6 +90,12 @@ class Let(Code):
 
     def dump(self):
         return u'<let %(n)s %(b)s>' % {'n': self.bind.dump(), 'b': self.body.dump()}
+
+def let(sym, val, rest):
+    if isinstance(rest, Block):
+        return Block([Let(sym, val)] + rest.nodes)
+    else:
+        return Block([Let(sym, val), rest])
 
 class Builtin(Code):
     def __init__(self, name, arity, args):

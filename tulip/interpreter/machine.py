@@ -23,30 +23,36 @@ class MachineContext():
         """runs the interpreter loop until program yields"""
 
     def run(self):
-        rules.expand(0, self.state)
-        rules.reduce(0, self.state)
+        try:
+            rules.expand(0, self.state)
+            rules.reduce(0, self.state)
 
-        print ansi_green + self.state.registers[0].show()
+            print ansi_green, self.state.registers[0].show()
+        finally:
+            print ansi_default
 
     def runVerbose(self):
-        """evaluates some expression until it is fully reduced, temporary testing"""
+        try:
+            """evaluates some expression until it is fully reduced, temporary testing"""
 
-        print ansi_blue + "input state: "
-        self.dump()
-        print
+            print ansi_blue + "input state: "
+            self.dump()
+            print
 
-        print ansi_white + "program stdout:"
+            print ansi_white, "program stdout:"
 
-        rules.expand(0, self.state)
-        rules.reduce(0, self.state)
+            rules.expand(0, self.state)
+            rules.reduce(0, self.state)
 
-        print
-        print ansi_green + "output state:"
+            print
+            print ansi_green, "output state:"
 
-        self.dump()
-        print
+            self.dump()
+            print
 
-        print ansi_white + "execution finished, program returned: " + self.state.registers[0].show()
+            print ansi_white + "execution finished, program returned: " + self.state.registers[0].show()
+        finally:
+            print ansi_default
 
     def halt(self):
         """prematurely stops evaluation in this context"""
@@ -65,4 +71,4 @@ class MachineContext():
 ansi_blue = "\033[94m"
 ansi_green = "\033[92m"
 ansi_white = "\033[97m"
-ansi_default = "\033[99m"
+ansi_default = "\033[0m"

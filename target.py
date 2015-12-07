@@ -9,6 +9,8 @@ from tulip.skeleton import parse_skeleton, UnmatchedError, ParseError
 from tulip.interpreter.machine import MachineContext
 from tulip.compiler import compile_base, CompileError, with_prelude
 
+import traceback
+
 import tulip.tests.runtime as tests
 
 def entry_point(argv):
@@ -45,8 +47,15 @@ def run_repl():
             lines.append(readline(prompt))
             code = u'\n'.join(lines)
             ast = compile_base(parse_skeleton(ReaderLexer(StringReader(u'<repl>', code))))
+            if ast is None:
+                print u'(no input)'
+                continue
+
             print ast.dump()
-            MachineContext(with_prelude(ast)).runVerbose()
+            try:
+                MachineContext(with_prelude(ast)).runVerbose()
+            except StandardError as e:
+                traceback.print_exc()
 
             lines = []
         except UnmatchedError as e:

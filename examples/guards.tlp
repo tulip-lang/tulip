@@ -1,0 +1,24 @@
+sign = [ x ? gt 0 x => .pos
+           ? lt 0 x => .neg
+           ? .t     => .zero ]
+
+# `else` is an alias for .t, like `otherwise` in haskell
+sign x ? gt 0 x = .pos
+       ? lt 0 x = .neg
+       ? else   = .zero
+
+do-stuff! = {
+  # this is an imperative if-else chain
+  # it errors if no cases match
+  [ !? cond => expr
+     ? cond => expr
+     ? cond => expr ]!
+
+  # this is one that is allowed to not match
+  try [ !
+    ? cond => expr
+    ? cond => expr
+    ? cond => expr
+  ]!
+}
+

@@ -1,5 +1,4 @@
-from .util import split_at, get_tok, seq_contains, list_contains, is_tok, underscore_sym
-import tulip.value as v
+from .util import split_at, get_tok, seq_contains, list_contains, is_tok, underscore_sym import tulip.value as v
 import tulip.code as c
 from tulip.lexer import Token
 
@@ -22,7 +21,7 @@ class Guard(Dispatch):
         return c.Branch([
             (context.compile_expr(cond), context.compile_expr(body)) \
               for (cond, body) in self.clauses
-        ])
+        ] + [(v.TRUE, match_error)]
 
 def detect_arity(pattern):
     if is_tok(pattern[0], Token.TAGGED):
@@ -52,6 +51,8 @@ def split_section(clause_toks):
         pat, clause = split_clause(clause_toks)
         return (pat, Body(clause))
 
+match_error = c.Builtin(u'match-error', 0, [])
+
 def compile_lambda(body, context):
     clauses = map(split_section, split_at(body, Token.NL))
     arity = check_arities(clauses, context)
@@ -66,7 +67,7 @@ def compile_lambda(body, context):
     defs = []
     last_out_sym = context.gensym(u'next')
 
-    defs.append(c.Let(last_out_sym, c.Lambda(underscore_sym, c.Builtin(u'match-error', 0, []))))
+    defs.append(c.Let(last_out_sym, c.Lambda(underscore_sym, match_error)))
 
     clauses.reverse()
 

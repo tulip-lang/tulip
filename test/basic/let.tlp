@@ -1,0 +1,42 @@
+test 'basic-binding {
+  x = 1
+  add x 2
+} 3
+
+test 'shadowing {
+  x = 1
+  x = 2
+  add x 3
+} 5
+
+test 'shadow-closure {
+  x = 1
+  y = [ z => add x z ]
+  x = 2
+  y 3
+} 4
+
+pending-test 'let-lambda {
+  x y = 2 > add y
+  x 3
+} 5
+
+pending-test 'let-lambda-clauses {
+  x .t = 1
+  x .f = 2
+
+  add (x .t) (x .f)
+} 3
+
+pending-test 'let-lambda-bang {
+  foo! = 1
+  x = foo
+  x!
+} 1
+
+pending-test 'let-recursive {
+  fac 0 = 1
+  fac x = fac (sub 1 x) > mul x
+
+  fac 4
+} 24

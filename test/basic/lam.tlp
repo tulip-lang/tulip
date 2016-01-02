@@ -1,0 +1,37 @@
+test 'basic-lambda {
+  [ x => 1 ] x
+} 1
+
+test 'tag-match {
+  [ .t => 1; .f => 2 ] .t
+} 1
+
+test 'tag-arguments {
+  .foo 3
+  > [ .foo x => add 1 x ]
+} 4
+
+test 'guards {
+  .foo 30
+  > [ .foo x ? gt 10 x => .big
+             ? else    => .smol ]
+} .big
+
+test 'guards-else {
+  .foo 3
+  > [ .foo x ? gt 10 x => .big
+             ? else    => .smol ]
+} .smol
+
+test-crash 'guards-incomplete { ! =>
+  .foo 3
+  > [ .foo x ? g 10 x => .big ]
+} .match-failure
+
+test-crash 'match-fail { ! =>
+  .f > [ .t => 1 ]
+} .match-failure
+
+test 'bang {
+  [ ! => 1 ]!
+} 1

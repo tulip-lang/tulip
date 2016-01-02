@@ -1,0 +1,18 @@
+test 'addition { add 3 4 } 7
+test 'chaining { 3 > add 4 } 7
+test 'paren-newlines (add 3
+                          4) 7
+
+test 'chain-newlines { 3
+                       > add 4 } 7
+
+test 'chain-lambda { (> add 3 > add 2) 5 } 9
+
+test 'block-lambda {
+  x = { y =>
+    z = add 3 y
+    add 2 z
+  }
+
+  x 5
+} 10

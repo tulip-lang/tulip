@@ -1,0 +1,11 @@
+test 'autolam-basic {
+  [ add 3 $ ] 4
+} 7
+
+test 'autolam-nested-expr {
+  [ add 3 (add 5 $) ]
+} 8
+
+test 'autolam-nested-lam {
+  [ [ add 1 $ ] 2 > add $ ] 3
+} 6

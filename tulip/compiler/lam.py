@@ -1,4 +1,5 @@
-from .util import split_at, get_tok, seq_contains, list_contains, is_tok, underscore_sym import tulip.value as v
+from .util import split_at, get_tok, seq_contains, list_contains, is_tok, underscore_sym
+import tulip.value as v
 import tulip.code as c
 from tulip.lexer import Token
 
@@ -21,7 +22,7 @@ class Guard(Dispatch):
         return c.Branch([
             (context.compile_expr(cond), context.compile_expr(body)) \
               for (cond, body) in self.clauses
-        ] + [(v.TRUE, match_error)]
+        ] + [(v.TRUE, match_error)])
 
 def detect_arity(pattern):
     if is_tok(pattern[0], Token.TAGGED):

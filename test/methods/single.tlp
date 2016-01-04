@@ -1,0 +1,34 @@
+@method op _ *
+
+@impl op x (.add y) = add x y
+@impl op x (.mul y) = mul x y
+@impl op x .square = mul x x
+@impl op x (.add2 y z) = x > add y > add z
+
+test 'basic-first { op 3 (.add 4) } 7
+test 'one-argument { op 3 (.mul 4) } 12
+test 'zero-arguments { op 3 .square } 9
+test 'two-arguments { op 3 (.add2 4 5) } 12
+
+@impl op x (f : %function) = f x
+@impl op x (y : %int) = y
+
+test 'function-type { op 3 (add 1) } 4
+test 'int-type { op 3 5 } 5
+
+@module MyNamespace [
+  @method op x (y : %int) = add x y
+
+  my-function y = op 3 y
+]
+
+test 'namespaced { MyNamespace/my-function 5 } 8
+test 'namespaced { MyNamespace/op 3 4 } 7
+
+@object Adder x [
+  go y = add x y
+]
+
+@impl op x (a : %Adder) = a/go x
+
+test 'object-type { op 3 (Adder 4) } 7

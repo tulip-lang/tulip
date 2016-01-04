@@ -40,3 +40,13 @@ pending-test 'let-recursive {
 
   fac 4
 } 24
+
+pending-test 'let-corecursive {
+  is-even 0 = .t
+  is-even x = is-odd (x > sub 1)
+
+  is-odd 0 = .f
+  is-odd x = is-odd (x > sub 1)
+
+  is-even 4
+} .t

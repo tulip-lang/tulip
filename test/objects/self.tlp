@@ -1,0 +1,10 @@
+@object Me x [
+  apply-to-self f = f self
+]
+
+test 'basic {
+  me = Me 2
+
+  me/apply-to-self [ add 1 $/x ]
+} 3
+

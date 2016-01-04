@@ -1,0 +1,18 @@
+launch-rockets -when: .now = .launching .all when
+launch-rocket rocket -when: .now = .launching rocket when
+
+test 'apply-with-optargs {
+  launch-rockets -when: .later
+} (.launching .all .later)
+
+test 'apply-with-zero-args {
+  launch-rockets!
+} (.launching .all .now)
+
+test 'apply-with-one-arg-and-optargs {
+  launch-rocket .my-rocket -when: .later
+} (.launching .my-rocket .later)
+
+test 'apply-with-one-arg {
+  launch-rocket .my-rocket
+} (.launching .my-rocket .now)

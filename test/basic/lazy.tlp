@@ -1,0 +1,37 @@
+test 'delays-evaluation {
+  x = ref 1
+  y = ~{ modify (add 1) x; .foo }
+
+  [ .foo => .ok ] y
+
+  get x
+} 2
+
+test 'caches-evaluation {
+  x = ref 1
+  y = ~{ modify (add 1) x; .foo }
+
+  [ .foo => .ok ] y
+  [ .foo => .ok ] y
+
+  get x
+} 2
+
+test 'whnf {
+  x = ref 1
+
+  y = ~(.foo ~{ modify (add 1) x; .bar })
+
+  [ .foo _ => 3 ] y
+
+  get x
+} 1
+
+test 'non-forcing-lambdas {
+  x = ref 1
+  y = ~{ modify (add 1) x; .foo }
+
+  [ z => z ] y
+
+  get x
+} 1

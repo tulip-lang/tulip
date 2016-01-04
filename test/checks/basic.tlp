@@ -1,0 +1,27 @@
+@check %list elem-type [ .cons _ %list; .nil ]
+
+test 'check-nil {
+  .nil > [ x : %list => .ok ]
+} .ok
+
+test 'check-cons {
+  .cons 1 .nil > [ x : %list => .ok ]
+} .ok
+
+@check %list-of %elem [ .cons %elem (%list-of %elem); .nil ]
+
+test 'check-paramaterized-nil {
+  .nil > [ x : %list-of %int => .ok ]
+} .ok
+
+test 'check-paramaterized-cons {
+  .cons 1 .nil > [ x : %list-of %int => .ok ]
+}
+
+@module MyModule {
+  @check %foo-or-bar [ .foo ; .bar ]
+}
+
+test 'check-namespaced {
+  .foo > [ %MyModule/foo-or-bar => .ok ]
+} .ok

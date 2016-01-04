@@ -1,0 +1,28 @@
+@object Outer x [
+  @object Inner y [
+    sum! = add x y
+
+    change-y new-y = Inner new-y
+    change-x new-x = Outer/Inner new-x y
+  ]
+]
+
+test 'initialization {
+  Outer 3 > [ $/Inner 2 ] > [ $/sum! ]
+} 5
+
+test 'currying-once {
+  Outer/Inner 3 2 > [ $/sum! ]
+} 5
+
+test 'currying-full {
+  Outer/Inner/sum! 3 2
+} 5
+
+test 'currying-object {
+  Outer/Inner 5 7 > [ $/change-y 6 ] > [ $/sum! ]
+} 11
+
+test 'uncurrying {
+  Outer/Inner 5 7 > [ $/change-x 6 ] > [ $/sum! ]
+} 13

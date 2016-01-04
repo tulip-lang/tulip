@@ -1,0 +1,16 @@
+test 'tuple-creation { (1, 2) } (1, 2)
+test 'tuple-nesting { ((.a, .b), .c) } (.a, .b, .c)
+test 'tuple-lambda {
+  f (x, y) = add x y
+  f (3, 4)
+} 7
+
+test 'tuple-sans-parens {
+  add 3 4, add 5 6
+} (7, 11)
+
+test 'tuple-lambda-sans-parens {
+  f = [ x, y => add x y ]
+
+  f (x, y)
+}

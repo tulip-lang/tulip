@@ -1,0 +1,14 @@
+@module Foo [
+  bar = 1
+
+  @module FooInner [
+    bar = 2
+
+    zot x = bar > add baz > add 5
+  ]
+
+  baz = 3
+]
+
+test 'basic { Foo/bar } 1
+test 'inner-module { Foo/FooInner/zot 10 } 18

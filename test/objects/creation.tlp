@@ -1,0 +1,48 @@
+@object Point x y [
+  magnitude = add x y > sqrt
+  move dx dy = Point (add x dx) (add y dy)
+
+  neg = Point (neg x) (neg y)
+
+  sub other = move other/neg
+
+  distance other = (sub other)/magnitude
+]
+
+
+@object Mutable x [
+  bar = ref x
+]
+
+test 'argument-slots { (Point 3 2)/x } 3
+test 'custom-slots { (Point 3 4)/magnitude } 5.0
+test 'methods { (Point 3 2)/move 2 1 } 5 3
+
+test 'static-access { Point/magnitude 3 4 } 5.0
+
+test 'curried-constructor {
+  point-at-three = Point 3
+
+  point-at-three 2 > [ $/x ]
+} 3
+
+pending-test 'mutation {
+  m = Mutable 3
+  set m/bar 5
+  get m/bar
+} 5
+
+outer-ref = ref 1
+
+@object MutateOnInit ! [
+  prop = {
+    modify (add 1) outer-ref
+    3
+  }
+]
+
+test 'mutate-on-init {
+  set outer-ref 1
+  obj = MutateOnInit!
+  get outer-ref
+} 2

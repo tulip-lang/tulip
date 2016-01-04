@@ -16,3 +16,17 @@ test 'block-lambda {
 
   x 5
 } 10
+
+test 'infix {
+  1 `add mul 2 3
+} 7
+
+thing x y = square x > add y
+
+test 'dashes {
+  3 > thing - 2
+} 11
+
+test 'midway-binding {
+  add 3 4 > x => mul x x
+} 49

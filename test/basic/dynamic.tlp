@@ -1,0 +1,29 @@
+$my-var = 1
+
+test 'simple { $my-var } 1
+
+test 'binding {
+  $my-var = 2
+  $my-var
+} 2
+
+test 'stack-scoping {
+  $my-var = 2
+  x = ref .nothing
+
+  store-value! = x > set $my-var
+
+  store y = { $my-var = y; store-value! }
+
+  store 3
+
+  ($my-var, get x)
+} (2, 3)
+
+@module Foo [
+  $bar = 1
+]
+
+test 'namespaced {
+  $Foo/bar
+} 1

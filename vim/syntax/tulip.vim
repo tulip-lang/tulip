@@ -3,7 +3,7 @@
 " Maintainer:   Jeanine Adkisson
 " URL:          TODO
 
-let ident = "[a-zA-Z_-][a-zA-Z0-9_-]*"
+let ident = "[a-zA-Z_-][\/a-zA-Z0-9_-]*"
 
 "" dash is anywhere in an ident
 setlocal iskeyword+=-

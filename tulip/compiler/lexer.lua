@@ -43,22 +43,19 @@ token_names = {
 }
 
 token_ids = {}
-for name, index in ipairs(token_names) do
+for index, name in ipairs(token_names) do
   token_ids[name] = index
 end
 
-eats_preceding_newline = {
-  [token_ids.GT]       = true,
-  [token_ids.RARROW]   = true,
-  [token_ids.EQ]       = true,
-  [token_ids.COMMA]    = true,
-  [token_ids.PIPE]     = true,
-  [token_ids.QUESTION] = true,
-  [token_ids.RBRACK]   = true,
-  [token_ids.RBRACE]   = true,
-}
+function Token(id, value, range)
+  return {
+    tokid = id,
+    value = value,
+    range = range
+  }
+end
 
-function Lexer(stream)
+function new(stream)
   local state = {
     index = 0,
     line = 0,
@@ -67,8 +64,8 @@ function Lexer(stream)
     head = nil,
     recording = false,
     uninitialized = true,
-    peek = nil
-    final_loc = nil
+    peek = nil,
+    final_loc = nil,
   }
 
   function setup()
@@ -157,7 +154,7 @@ function Lexer(stream)
 
     assert(token == token_ids.EOF or state.index ~= start.index, 'must advance the stream!')
 
-    return { tokid = token, value = value, range = { start = start, final = final } }
+    return Token(token, value, { start = start, final = final })
   end
 
   function peek()
@@ -302,7 +299,7 @@ function Lexer(stream)
     if state.head == '+' then
       advance()
       skip_ws()
-      return Token.PLUS
+      return token_ids.PLUS
     end
 
     if state.head == '$' then
@@ -310,10 +307,10 @@ function Lexer(stream)
       if is_alpha(state.head) then
         record_ident()
         skip_ws()
-        return Token.DYNAMIC
+        return token_ids.DYNAMIC
       else
         skip_ws()
-        return Token.DOLLAR
+        return token_ids.DOLLAR
       end
     end
 
@@ -356,9 +353,101 @@ function Lexer(stream)
       end
     end
 
+    if state.head == ':' then
+      advance()
+      skip_lines()
+      return token_ids.COLON
+    end
 
+    if state.head == ',' then
+      advance()
+      skip_lines()
+      return token_ids.COMMA
+    end
+
+    if state.head == '*' then
+      advance()
+      skip_ws()
+      return token_ids.STAR
+    end
+
+    if state.head == '~' then
+      advance()
+      skip_ws()
+      return token_ids.TILDE
+    end
+
+    if state.head == '%' then
+      advance()
+      record_ident()
+      skip_ws()
+      return token_ids.CHECK
+    end
+
+    if state.head == '@' then
+      advance()
+      record_ident()
+      skip_ws()
+      return token_ids.ANNOT
+    end
+
+    if state.head == '&' then
+      advance()
+      record_ident()
+      skip_ws()
+      return token_ids.AMP
+    end
+
+    if state.head == '/' then
+      advance()
+      if is_alpha(state.head) then
+        record_ident()
+      else
+        state.tape = {}
+      end
+
+      if state.head == '[' then
+        advance()
+        skip_lines()
+        return token_ids.MACRO
+      else
+        error('expected [')
+      end
+    end
+
+    if state.head == '.' then
+      advance()
+      if is_alpha(state.head) then
+        record_ident()
+        skip_ws()
+        return token_ids.TAGGED
+      else
+        skip_ws()
+        return token_ids.DOT
+      end
+    end
+
+    if is_digit(state.head) then
+      record()
+      while is_digit(state.head) do advance() end
+      end_record()
+      skip_ws()
+      return token_ids.INT
+    end
+
+    if is_alpha(state.head) then
+      record_ident()
+      skip_ws()
+      return token_ids.NAME
+    end
+
+    if is_nl(state.head) or state.head == '#' then
+      skip_lines()
+      return token_ids.NL
+    end
+
+    error('unexpected character')
   end
-
 
   return {
     setup = setup,
@@ -369,5 +458,34 @@ function Lexer(stream)
 end
 
 function is_nl(char)
+  if not char then return false end
   return char == '\r' or char == '\n' or char == ';'
 end
+
+function is_ws(char)
+  if not char then return false end
+  return char == ' ' or char == '\t'
+end
+
+function is_alpha(char)
+  if not char then return false end
+  return ('a' <= char and char <= 'z') or
+         ('A' <= char and char <= 'Z')
+end
+
+function is_digit(char)
+  if not char then return false end
+  return ('0' <= char and char <= '9')
+end
+
+function is_ident_char(char)
+  if not char then return false end
+
+  return is_alpha(char) or is_digit(char) or char == '-' or char == '_'
+end
+
+return {
+  new = new,
+  token_ids = token_ids,
+  token_names = token_names
+}

@@ -23,7 +23,7 @@ test 'static-access { Point/magnitude 3 4 } 5.0
 test 'curried-constructor {
   point-at-three = Point 3
 
-  point-at-three 2 > [ $/x ]
+  point-at-three 2 > [$/x]
 } 3
 
 pending-test 'mutation {

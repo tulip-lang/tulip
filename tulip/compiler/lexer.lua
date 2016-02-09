@@ -34,7 +34,7 @@ token_names = {
   "TICKED",
   "MACRO",
   "ANNOT",
-  "SLASH",
+  "LOOKUP",
   "INT",
   "NAME",
   "STRING",
@@ -61,6 +61,7 @@ function new(stream)
     line = 0,
     column = 0,
     tape = nil,
+    last = nil,
     head = nil,
     recording = false,
     uninitialized = true,
@@ -118,6 +119,7 @@ function new(stream)
       table.insert(state.tape, state.head)
     end
 
+    state.last = state.head
     state.head = stream.next()
   end
 
@@ -399,19 +401,25 @@ function new(stream)
     end
 
     if state.head == '/' then
-      advance()
-      if is_alpha(state.head) then
-        record_ident()
-      else
-        state.tape = {}
-      end
-
-      if state.head == '[' then
+      if is_immediate(state.last) then
         advance()
-        skip_lines()
-        return token_ids.MACRO
+        record_ident()
+        return token_ids.LOOKUP
       else
-        error('expected [')
+        advance()
+        if is_alpha(state.head) then
+          record_ident()
+        else
+          state.tape = {}
+        end
+
+        if state.head == '[' then
+          advance()
+          skip_lines()
+          return token_ids.MACRO
+        else
+          error('expected [')
+        end
       end
     end
 
@@ -482,6 +490,15 @@ function is_ident_char(char)
   if not char then return false end
 
   return is_alpha(char) or is_digit(char) or char == '-' or char == '_'
+end
+
+function is_immediate(char)
+  if is_ws(char) then return false end
+  if is_alpha(char) then return true end
+  if char == ')' or char == ']' or char == '}' then return true end
+  if char == '$' then return true end
+
+  return false
 end
 
 return {

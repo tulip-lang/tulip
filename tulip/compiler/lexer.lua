@@ -342,7 +342,7 @@ function new(stream)
 
     if state.head == '-' then
       advance()
-      if is_ident_char(state.head) then
+      if is_alpha(state.head) then
         record_ident()
         if state.head == ':' then
           advance()
@@ -352,6 +352,8 @@ function new(stream)
           skip_ws()
           return token_ids.FLAG
         end
+      else
+        return token_ids.DASH
       end
     end
 
@@ -496,7 +498,7 @@ function is_immediate(char)
   if is_ws(char) then return false end
   if is_alpha(char) then return true end
   if char == ')' or char == ']' or char == '}' then return true end
-  if char == '$' then return true end
+  if char == '$' or char == '-' then return true end
 
   return false
 end

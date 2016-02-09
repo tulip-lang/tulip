@@ -1,0 +1,17 @@
+#!/usr/bin/env lua
+
+Lexer = require 'tulip/compiler/lexer'
+Reader = require 'tulip/compiler/reader'
+Skeleton = require 'tulip/compiler/skeleton'
+
+string_reader = Reader.string_reader
+parse_skeleton = Skeleton.parse_skeleton
+
+while true do
+  io.stdout:write('> ')
+  local input = io.stdin:read()
+
+  if not input then break end
+
+  print(Skeleton.inspect(parse_skeleton(Lexer.new(string_reader(input)))))
+end

@@ -1,18 +1,35 @@
-launch-rockets -when: .now = .launching .all when
-launch-rocket rocket -when: .now = .launching rocket when
+start-sprinklers -when: .now = .starting .all when
+start-sprinkler sprinkler -when: .now = .starting sprinkler when
 
 test 'apply-with-optargs {
-  launch-rockets -when: .later
+  engange-sprinklers -when: .later
 } (.launching .all .later)
 
 test 'apply-with-zero-args {
-  launch-rockets!
+  engange-sprinklers!
 } (.launching .all .now)
 
+test 'mention-doesnt-apply {
+  some-function = activate-sprinklers
+  some-function!
+} (.starting .all .now)
+
 test 'apply-with-one-arg-and-optargs {
-  launch-rocket .my-rocket -when: .later
-} (.launching .my-rocket .later)
+  activate-sprinklers .my-sprinkler -when: .later
+} (.launching .my-sprinkler .later)
 
 test 'apply-with-one-arg {
-  launch-rocket .my-rocket
-} (.launching .my-rocket .now)
+  activate-sprinklers .my-sprinkler
+} (.launching .my-sprinkler .now)
+
+# boolean flags
+
+prune -harvest = .pruning (harvest > [ .t => .harvesting; .f => .not-harvesting ])
+
+test 'defaults-to-false {
+  prune!
+} (.pruning .not-harvesting)
+
+test 'presence-is-true {
+  prune -harvest
+} (.pruning .harvesting)

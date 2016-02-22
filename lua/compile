@@ -1,8 +1,8 @@
 #!/usr/bin/env lua
 
-Lexer = require 'tulip/compiler/lexer'
-Reader = require 'tulip/compiler/reader'
-Skeleton = require 'tulip/compiler/skeleton'
+Lexer = require 'lua/lexer'
+Reader = require 'lua/reader'
+Skeleton = require 'lua/skeleton'
 
 string_reader = Reader.string_reader
 parse_skeleton = Skeleton.parse_skeleton

@@ -1,5 +1,5 @@
-local dyn = require('tulip/compiler/dyn')
-local skeleton = require('tulip/compiler/skeleton')
+local dyn = require('lua/dyn')
+local skeleton = require('lua/skeleton')
 
 local function compile(skeleton)
   if #skeletons == 0 then return nil end

@@ -1,4 +1,4 @@
-Lexer = require 'tulip/compiler/lexer'
+Lexer = require('lua/lexer')
 
 token_ids   = Lexer.token_ids
 token_names = Lexer.token_names

@@ -17,7 +17,7 @@ typedef struct tulip_tag {
 
 tulip_tag_t* build_tag(char* name, unsigned int length, tulip_value_t* contents) {
     tulip_tag_t * t = malloc(sizeof(tulip_tag_t));
-    
+
     if(t == NULL) {
       printf("Tag allocation failed");
       return NULL;
@@ -25,7 +25,7 @@ tulip_tag_t* build_tag(char* name, unsigned int length, tulip_value_t* contents)
 
     if (length < 5) {
       tulip_value_t* p = realloc(contents, 5*sizeof(tulip_value_t));
-    
+
       if (p) {
         *t = (tulip_tag_t){name, length, p};
       } else {
@@ -35,7 +35,7 @@ tulip_tag_t* build_tag(char* name, unsigned int length, tulip_value_t* contents)
     } else {
       *t = (tulip_tag_t){name, length, contents};
     }
-    
+
     return t;
 }
 
@@ -76,7 +76,7 @@ int main() {
         (tulip_value_t) {.literal_string = "nesting"} \
     }, \
     2*sizeof(tulip_value_t));
-  
+
   tulip_tag_t* inner = build_tag("branch", 2, v1);
   memcpy(v2,
     (tulip_value_t []){

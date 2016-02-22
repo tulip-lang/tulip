@@ -27,29 +27,14 @@ A language is a very large project, and I need your help!  Especially if you are
 
 Tulip is still very much in design mode, so the architecture is still being decided on.  I hang out with a few others in `#tuliplang` on freenode if you want to see where you can best contribute.  Here are some specific things I'll need help with:
 
-* Design of the macro definition and parsing system
-* Implementation of modules / imports
-* Fleshing out the parser (parser.py)
-* Designing and implementing the vm interpreter / runtime (including concurrency)
-* Writing the compile step (syntax -> bytecode)
-* Doc writing (there's a blog post to be written about the changes to the language since the last post)
+* Design / implementation of the macro definition and parsing system, in lua
+* Implementation of modules / imports (pure design plus maybe some C)
+* Designing and implementing the vm interpreter / runtime in C (including concurrency)
+* Implementation of basic tulip data structures in C - tags, encoded strings, etc
+* Writing the compile step, from skeleton trees to bytecode, in lua
+* Doc writing - mostly tutorials and intro material for now
+  - intro to tagged values, pattern matching
+  - how skeleton trees / macros work
+  - the process model
 * Design of the packaging system
 * Implementation of the standard library (in tulip!)
-
-The implementation uses [rpython](https://rpython.readthedocs.org/), which is a subset of python. A few other resources for learning the general approach are:
-  * the pypy team's own [example interpreter](https://bitbucket.org/pypy/example-interpreter)
-  * [pixie](https://github.com/pixie-lang/pixie), a clojure-like language in rpython
-
-As for tulip itself, here's a general sketch of the architecture:
-
-* Parsing is three steps:
-  - A hand-written lexer in `lexer.py` (an object with setup/next/teardown methods)
-  - A skeleton syntax is created in `skeleton.py`, which is a tulip data-structure representing only the tokens and nesting
-  - Macros are expanded into more skeleton trees (TODO)
-  - The skeleton tree is turned into bytecode, with maybe an intermediate tree (TODO)
-
-* From parsing, a `Syntax` object is created.  These will have `.compile(ctx)` methods, which accept a CompileContext object to which instructions and constants are pushed.
-* A compile context can render its bytecode to a Bytecode object, which can be used to create Function objects, etc.
-* The VM interpreter will be able to interpret Bytecode objects given appropriate links to arguments and a closure.
-
-* A lot of functionality will be implemented by NativeFunction objects, which will be implemented in rpython and can use the FFI.

@@ -1,41 +1,47 @@
 #include <stdlib.h>
 #include <stdio.h>
-
-struct tulip_tag;
+#include <string.h>
 
 typedef union tulip_value {
   char*  literal_string;
   double  literal_number;
-  size_t* closure;
+  void* closure;
   struct tulip_tag* tag;
-} tulip_value;
+} tulip_value_t;
 
 typedef struct tulip_tag {
   char* tag_name;
-  int length;
-  tulip_value* contents;
-} tulip_tag;
+  unsigned int length;
+  tulip_value_t* contents;
+} tulip_tag_t;
 
-tulip_tag* build_tag(char* name, tulip_value* contents) {
-  int l = sizeof(contents) / sizeof(tulip_value);
-
-  if (l < 5) {
-    tulip_value* p = realloc(contents, sizeof(tulip_value[5]));
-
-    if (p) {
-      return &(tulip_tag){name, l, p};
-    } else {
-      printf("array resize failed");
+tulip_tag_t* build_tag(char* name, unsigned int length, tulip_value_t* contents) {
+    tulip_tag_t * t = malloc(sizeof(tulip_tag_t));
+    
+    if(t == NULL) {
+      printf("Tag allocation failed");
       return NULL;
     }
-  } else {
-    return &(tulip_tag){name, l, contents};
-  }
+
+    if (length < 5) {
+      tulip_value_t* p = realloc(contents, 5*sizeof(tulip_value_t));
+    
+      if (p) {
+        *t = (tulip_tag_t){name, length, p};
+      } else {
+        printf("array resize failed");
+        return NULL;
+      }
+    } else {
+      *t = (tulip_tag_t){name, length, contents};
+    }
+    
+    return t;
 }
 
-tulip_tag* append_tag(tulip_tag* t, tulip_value v) {
+tulip_tag_t* append_tag(tulip_tag_t* t, tulip_value_t v) {
   if(t->length >= 5) {
-    tulip_value* p = realloc(t->contents, sizeof(tulip_value[t->length + 1]));
+    tulip_value_t* p = realloc(t->contents, sizeof(tulip_value_t[t->length + 1]));
     if(p) {
       t->contents[t->length] = v;
       t->length += 1;
@@ -50,22 +56,37 @@ tulip_tag* append_tag(tulip_tag* t, tulip_value v) {
   return t;
 }
 
-char* show_value(tulip_value* v) {
+char* show_value(tulip_value_t* v) {
   char* s = (char*) v;
   return s;
 }
 
-char* show_tag(tulip_tag* t) {
-};
+char* show_tag(tulip_tag_t* t) {
+  (void) t;
+  return NULL;
+}
 
 
 int main() {
-  tulip_value v1[] = {(tulip_value) "tree", (tulip_value) "nesting"};
-  tulip_tag* inner = build_tag("branch", v1);
-  tulip_value v2[] = {(tulip_value) "test", (tulip_value) inner};
-  tulip_tag* outer = build_tag("branch", v2);
+  tulip_value_t* v1 = malloc(2*sizeof(tulip_value_t));
+  tulip_value_t* v2 = malloc(2*sizeof(tulip_value_t));
+  memcpy(v1,
+    (tulip_value_t []){
+        (tulip_value_t) {.literal_string = "tree"}, \
+        (tulip_value_t) {.literal_string = "nesting"} \
+    }, \
+    2*sizeof(tulip_value_t));
+  
+  tulip_tag_t* inner = build_tag("branch", 2, v1);
+  memcpy(v2,
+    (tulip_value_t []){
+      (tulip_value_t) {.literal_string = "test"}, \
+      (tulip_value_t) {.tag = inner} \
+    }, \
+    2*sizeof(tulip_value_t));
+  tulip_tag_t* outer = build_tag("branch", 2, v2);
 
-  printf("%s", (char*) &outer->contents[0]);
+  printf("%s", outer->contents[1].tag->contents[1].literal_string);
 
   return 0;
 }

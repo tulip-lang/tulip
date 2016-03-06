@@ -33,6 +33,7 @@ token_names = {
   "TAGGED",
   "TICKED",
   "MACRO",
+  "PMACRO",
   "ANNOT",
   "LOOKUP",
   "INT",
@@ -201,11 +202,8 @@ function new(stream)
     end_record()
   end
 
-  function process_string()
-    advance()
-    record()
-
-    local level = 1
+  function advance_through_string()
+    local level = 0
 
     while true do
       if state.head == '\\' then
@@ -218,13 +216,9 @@ function new(stream)
         error('unmatched close brace')
       end
 
-      if level == 0 then
-        end_record()
-        advance()
-        break
-      else
-        advance()
-      end
+      advance()
+
+      if level == 0 then break end
     end
   end
 
@@ -270,7 +264,9 @@ function new(stream)
     if state.head == "'" then
       advance()
       if state.head == '{' then
-        process_string()
+        record()
+        advance_through_string()
+        end_record()
         skip_ws()
         return token_ids.STRING
       else
@@ -403,25 +399,30 @@ function new(stream)
     end
 
     if state.head == '/' then
-      if is_immediate(state.last) then
-        advance()
-        record_ident()
-        return token_ids.LOOKUP
-      else
-        advance()
-        if is_alpha(state.head) then
-          record_ident()
-        else
-          state.tape = {}
-        end
+      advance()
+      record_ident()
+      return token_ids.LOOKUP
+    end
 
-        if state.head == '[' then
-          advance()
-          skip_lines()
-          return token_ids.MACRO
-        else
-          error('expected [')
-        end
+    if state.head == '\\' then
+      advance()
+      if is_alpha(state.head) then
+        record_ident()
+      else
+        state.tape = {}
+      end
+
+      if state.head == '[' then
+        advance()
+        skip_lines()
+        return token_ids.MACRO
+      elseif state.head == '{' then
+        state.recording = true
+        advance_through_string()
+        end_record()
+        return token_ids.PMACRO
+      else
+        error('expected [')
       end
     end
 
@@ -456,7 +457,7 @@ function new(stream)
       return token_ids.NL
     end
 
-    error('unexpected character')
+    error('unexpected character <' .. state.head .. '>')
   end
 
   return {

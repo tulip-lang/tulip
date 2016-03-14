@@ -10,5 +10,19 @@
   baz = 3
 ]
 
+@object C bar
+
 test 'basic { Foo/bar } 1
 test 'inner-module { Foo/FooInner/zot 10 } 18
+
+test 'aliasing {
+  get-bar x = x/bar
+
+  get-bar Foo
+} 2
+
+test 'aliasing-with-objects {
+  get-bar x = x/bar
+
+  .pair (get-bar Foo) (get-bar (C 2))
+} (.pair 1 2)

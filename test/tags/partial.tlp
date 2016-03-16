@@ -1,0 +1,12 @@
+test 'partial-tag-application {
+  x = .foo 1 2
+  x 3 4
+} (.foo 1 2 3 4)
+
+test 'memory-sharing {
+  r = ref 1
+  x = .foo r
+  y = x 2
+  set r 3
+  y > [ .foo rr _ => get rr ]
+} 3

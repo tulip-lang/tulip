@@ -1,5 +1,12 @@
-# -*- configurable options -*- #
+cflags = --std=c11 -Isrc/ -g
 
-.PHONY: all
-all:
-	@echo TODO
+.PHONY: build run clean
+
+build: types
+run:
+	./build/tag
+clean:
+	rm build/**
+
+types:
+	clang $(cflags) src/types/core.c src/types/value.c src/types/scaffold.c -o build/tag

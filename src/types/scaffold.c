@@ -5,41 +5,29 @@
 #include "types/value.h"
 #include "types/core.h"
 
-int main_() {
-  tulip_value_t* v1 = malloc(2*sizeof(tulip_value_t));
-  tulip_value_t* v2 = malloc(2*sizeof(tulip_value_t));
-  memcpy(v1,
-         (tulip_value_t []){
-           (tulip_value_t) {.literal_string = "tree"}, \
-             (tulip_value_t) {.literal_string = "nesting"} \
-         }, \
-         2*sizeof(tulip_value_t));
-
-  tulip_tag_t* inner = build_tag("branch", 2, v1);
-  memcpy(v2,
-         (tulip_value_t []){
-           (tulip_value_t) {.literal_string = "test"}, \
-             (tulip_value_t) {.tag = inner} \
-         }, \
-         2*sizeof(tulip_value_t));
-
-  tulip_tag_t* outer = build_tag("branch", 2, v2);
-  printf("%s", outer->contents[1].tag->contents[1].literal_string);
-
-  return 0;
-}
-
 int main() {
-  int list_length = 2;
 
-  tulip_value_t list[] = { (tulip_value_t) {.literal_string = "head"}
-                         , (tulip_value_t) {.literal_string = "tail"}
-                         };
+  tulip_value vs[] = {build_string("test-string-1"), build_number(12.34)};
+  tulip_value null_tag = build_tag("nil", 0, NULL);
 
-  tulip_value_t* list_cons = cons(list, list_length);
+  printf("string printing: %s\n", show_value(vs[0]));
+  printf("number printing: %s\n", show_value(vs[1]));
 
-  printf("reading value\n");
-  printf("%s", (*list_cons).tag->contents[0].);
+  printf("niladic tag printing: %s\n", show_value(null_tag));
+
+  tulip_value pair[] = {build_string("one"), build_string("two")};
+  tulip_value list = cons(pair, 2);
+
+  printf("cons head value: %s\n", show_value(list.tag.contents[0]));
+  printf("cons tail head value: %s\n", show_value(list.tag.contents[1].tag.contents[0]));
+
+  tulip_value triplet[] = {build_string("one"), build_string("two"), build_string("three")};
+  tulip_value long_cons = cons(triplet, 3);
+
+  printf("cons head vals: [%s, %s, %s]\n", show_value(long_cons.tag.contents[0]), show_value(long_cons.tag.contents[1].tag.contents[0]), show_value(long_cons.tag.contents[1].tag.contents[1].tag.contents[0]));
+
+  tulip_value block_test = block(triplet, 3);
+  printf("block node: %s", show_value(block_test));
 
   return 0;
 }

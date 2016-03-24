@@ -4,8 +4,8 @@
 
 #include "types/value.h"
 
-tulip_value_t* cons(tulip_value_t* array, int length);
-bool validate_cons(tulip_value_t* subject);
-tulip_value_t* block(tulip_value_t* contents, int length);
-bool validate_block(tulip_value_t* subject);
-tulip_value_t* branch(tulip_value_t* predicates, tulip_value_t* conseuqnces, int length);
+tulip_value cons(tulip_value* array, int length);
+bool validate_cons(tulip_value subject);
+tulip_value block(tulip_value* contents, int length);
+bool validate_block(tulip_value subject);
+tulip_value branch(tulip_value* predicates, tulip_value* conseuqnces, int length);

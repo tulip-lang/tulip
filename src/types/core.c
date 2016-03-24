@@ -6,65 +6,76 @@
 
 // takes an array of tulip values
 // returns `.cons array[0] (.cons array[1] ...)`
-// temporarily reduced to only the tail pair `.cons array[n-1] .nil` because i'm having some trouble with it
-tulip_value_t* cons(tulip_value_t* array, int length) {
-  tulip_value_t* nil = (tulip_value_t*) build_tag("nil", 0, NULL);
-  printf("%s\n", nil->tag->tag_name);
-  tulip_value_t* tail_c = malloc(2*sizeof(tulip_value_t));
+tulip_value cons(tulip_value array[], int length) {
+  // build `.cons array[n] .nil` tail pair
+  tulip_value nil = build_tag("nil", 0, NULL);
+  tulip_value tail = build_tag("cons", 2, (tulip_value[]){array[length-1], nil}); //inlining these list constructors seems a little weird but it's working consistently
 
-  tulip_value_t tail_a[] = { array[length-1], *nil };
+  // build and nest intermediate pairs
+  tulip_value swap = tail;
+  for (int i = length-2; 0 < i; i--) {
+    swap = build_tag("cons", 2, (tulip_value[]){array[i], swap});
+  }
 
-  memcpy(tail_c, tail_a, 2*sizeof(tulip_value_t));
-
-  printf("tail value: %s\n", tail_c[0].literal_string);
-
-  tulip_value_t* tail = (tulip_value_t*) build_tag("cons", 2, tail_c);
-
-  return tail;
+  // build and return head pair
+  tulip_value head = build_tag("cons", 2, (tulip_value[]){array[0], swap});
+  return head;
 }
 
-bool validate_cons(tulip_value_t* subject) { return false; };
+bool validate_cons(tulip_value subject) { return false; };
 
-// takes a list of tulip values as block statements
-// returns `.block (.cons ...)`
-tulip_value_t* block(tulip_value_t* statements, int length){
-  // this malloc seems extraneous
-  tulip_value_t* statements_ = malloc(sizeof(tulip_value_t));
-  tulip_value_t* statements_c = cons(statements, length);
-
-  // also this _might_ be nonsensical
-  // i dont fully understand heap semantics yet
-  memcpy(statements_, (tulip_value_t []) {*statements_c}, sizeof(tulip_value_t));
-
-  tulip_value_t* block_tag = (tulip_value_t*) build_tag("block", 1, statements_);
-  return block_tag;
+// x
+// .name "x"
+tulip_value name(char* identifier) {
+  return build_tag("name", 1, (tulip_value[]){build_string(identifier)});
 }
 
-bool validate_block(tulip_value_t* subject){
-  return false;
+// x/y
+// .ns-name (.name x) (.name y)
+tulip_value ns_name(char* namespace, char* identifier) {
+  return build_tag("ns-name", 2, (tulip_value[]){name(namespace), name(identifier)});
 }
 
-tulip_value_t* lambda(){ return NULL; }
+// { `statements[1]`; `statements[2]`; ... }
+// .block (.cons `statements[1]` (.cons `statements[2]` ...))
+tulip_value block(tulip_value statements[], int length){
+  return build_tag("block", 1, (tulip_value[]){cons(statements, length)});
+}
+
+bool validate_block(){ return false; }
+
+// [ bind => body ]
+// .lambda (bind) (body)
+tulip_value lambda(tulip_value bind, tulip_value body) {
+  return build_tag("lambda", 2, (tulip_value[]){bind, body});
+}
 bool validate_lambda(){ return false; }
-tulip_value_t* apply(){ return NULL; }
+
+// f x y
+// .apply (.name f) (.cons x (.cons y))
+tulip_value apply(tulip_value call, tulip_value args[], int saturation){
+  return build_tag("apply", 2, (tulip_value[]){call, cons(args, saturation)});
+}
 bool validate_apply(){ return false; }
-tulip_value_t* let(){ return NULL; }
+
+// bind = definition
+// .let (bind) (definition)
+tulip_value let(tulip_value bind, tulip_value definition){
+  return build_tag("let", 2, (tulip_value[]){bind, definition});
+}
 bool validate_let(){ return false; }
-tulip_value_t* builtin(){ return NULL; }
+
+// println/1 x
+// .builtin "println" 1 (.cons (.name x) nil)
+tulip_value builtin(char* builtin_name, int arity, tulip_value args[], int saturation) {
+  return build_tag("builting", 3, (tulip_value[]){build_string(builtin_name), build_number(arity), cons(args, saturation)});
+}
+
 bool validate_builtin(){ return false; }
 
 // takes two lists of tulip values (same length) as predicate/consequence pairs
 // returns `.branch (.cons ...) (.cons ...)`
-tulip_value_t* branch(tulip_value_t* predicates, tulip_value_t* consequences, int length) {
-  // yeah this could/should be a lot prettier
-  tulip_value_t* predicates_c = cons(predicates, length);
-  tulip_value_t* consequences_c = cons(predicates, length);
-
-  tulip_value_t* contents = malloc(sizeof(tulip_value_t) * 2);
-  memcpy(contents, (tulip_value_t []) {*predicates_c, *consequences_c}, sizeof(tulip_value_t)*2);
-
-  tulip_value_t* branch_tag = (tulip_value_t*) build_tag("branch", 2, contents);
-
-  return branch_tag;
+tulip_value branch(tulip_value predicates[], tulip_value consequences[], int length) {
+  return build_tag("branch", 2, (tulip_value[]){cons(predicates, length), cons(consequences, length)});
 }
 bool validate_branch(){ return false; }

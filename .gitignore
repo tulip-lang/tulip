@@ -1,5 +1,5 @@
 # compiled binary
-/target-c
+build/**
 
 # fetched dependencies
 /.externals
@@ -9,3 +9,6 @@
 
 # ???
 /dist
+
+# editor weirdness
+.clang_complete

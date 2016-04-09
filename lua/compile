@@ -1,10 +1,10 @@
 #!/usr/bin/env lua
 
+Stubs = require 'lua/stubs'
 Lexer = require 'lua/lexer'
-Reader = require 'lua/reader'
 Skeleton = require 'lua/skeleton'
 
-string_reader = Reader.string_reader
+string_reader = Stubs.string_reader
 parse_skeleton = Skeleton.parse_skeleton
 
 while true do

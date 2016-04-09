@@ -1,3 +1,7 @@
+Stubs = require 'lua/stubs'
+
+Token = Stubs.Token
+
 token_names = {
   "LPAREN",
   "RPAREN",
@@ -46,14 +50,6 @@ token_names = {
 token_ids = {}
 for index, name in ipairs(token_names) do
   token_ids[name] = index
-end
-
-function Token(id, value, range)
-  return {
-    tokid = id,
-    value = value,
-    range = range
-  }
 end
 
 function new(stream)

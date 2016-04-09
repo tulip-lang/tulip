@@ -14,45 +14,11 @@ eats_preceding_newline = {
   [token_ids.RBRACE]   = true,
 }
 
-function tag(name, ...)
-  return { tag = name, values = {...} }
-end
-
 function parse_skeleton(lexer)
   lexer.setup()
   local parsed = _parse_sequence(lexer, nil, 0)
   lexer.teardown()
   return parsed
-end
-
-function inspect_skeletons(skeletons)
-  local out = {}
-  for k,v in pairs(skeletons) do
-    out[k] = inspect_one(v)
-  end
-
-  return table.concat(out, ' ')
-end
-
-function inspect_one(skel)
-  if skel.tag == 'nested' then
-    local open, close, body = unpack(skel.values)
-     return '[' .. inspect_token(open) .. ': ' .. inspect_skeletons(body) .. ' :' .. inspect_token(close) .. ']'
-  elseif skel.tag == 'token' then
-    local token = unpack(skel.values)
-    return inspect_token(token)
-  else
-    error('bad skeleton')
-  end
-end
-
-function inspect_token(token)
-  name = token_names[token.tokid]
-  if token.value then
-    return name .. '(' .. token.value .. ')'
-  else
-    return name
-  end
 end
 
 function is_closing(tok)

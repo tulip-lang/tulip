@@ -13,11 +13,11 @@ token_names = {
   "RBRACE",
 
   "GT",
+  "LT",
   "DOLLAR",
   "NL",
   "RARROW",
   "EQ",
-  "PLUS",
   "TILDE",
   "BANG",
   "PIPE",
@@ -38,8 +38,12 @@ token_names = {
   "TICKED",
   "MACRO",
   "PMACRO",
-  "ANNOT",
+  "ATMACRO",
+  "PATMACRO",
+  "STARRED",
   "LOOKUP",
+  "ANNOT",
+  "PANNOT",
   "INT",
   "NAME",
   "STRING",
@@ -292,8 +296,18 @@ function new(stream)
 
     if state.head == '+' then
       advance()
-      skip_ws()
-      return token_ids.PLUS
+      record_ident()
+
+      if state.head == '{' then
+        state.recording = true
+        advance_through_string()
+        end_record()
+        skip_lines()
+        return token_ids.PANNOT
+      else
+        skip_ws()
+        return token_ids.ANNOT
+      end
     end
 
     if state.head == '$' then
@@ -310,8 +324,14 @@ function new(stream)
 
     if state.head == '>' then
       advance()
-      skip_lines()
+      skip_ws()
       return token_ids.GT
+    end
+
+    if state.head == '<' then
+      advance()
+      skip_lines()
+      return token_ids.LT
     end
 
     if state.head == '!' then
@@ -383,8 +403,17 @@ function new(stream)
     if state.head == '@' then
       advance()
       record_ident()
-      skip_ws()
-      return token_ids.ANNOT
+
+      if state.head == '{' then
+        state.recording = true
+        advance_through_string()
+        end_record()
+        skip_lines()
+        return token_ids.PATMACRO
+      else
+        skip_ws()
+        return token_ids.ATMACRO
+      end
     end
 
     if state.head == '&' then

@@ -55,6 +55,8 @@ function _parse_sequence(lexer, open_tok, expected_close_id)
       else
         unexpected(tok, 'invalid nesting from the beginning')
       end
+    elseif tok.tokid == token_ids.LT then
+      table.insert(elements, _parse_sequence(lexer, tok, token_ids.GT))
     elseif tok.tokid == token_ids.LPAREN then
       table.insert(elements, _parse_sequence(lexer, tok, token_ids.RPAREN))
     elseif tok.tokid == token_ids.LBRACK or tok.tokid == token_ids.MACRO then
@@ -67,6 +69,11 @@ function _parse_sequence(lexer, open_tok, expected_close_id)
       -- pass
     else
       table.insert(elements, tag('token', tok))
+
+      if tok.tokid == token_ids.GT then
+        -- manually skip NL tokens here, since the lexer can't for <...>
+        while lexer.peek().tokid == token_ids.NL do lexer.next() end
+      end
     end
   end
 end

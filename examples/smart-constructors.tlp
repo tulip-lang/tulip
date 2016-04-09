@@ -1,0 +1,5 @@
+cons h (t : .cons _ _) = .cons h t
+cons h .nil = .cons h .nil
+nil = .nil
+
+cons 3 4 # error : expected 4 to match (.cons _ _) or (.nil)

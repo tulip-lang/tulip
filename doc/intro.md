@@ -76,7 +76,7 @@ f x = do-thing-to x
 f = [ x => do-thing-to x ]
 ```
 
-Naming all the variables and typing `=>` every time can be a pain on the repl, so for simple blocks tulip provides a feature called **autoblocks** and the **autovar**.  Autoblocks are also delimited by square brackets, but contain no pattern and only a single clause.  The autovar, denoted `$`, is the argument to the closest-nested autoblock:
+Naming all the variables and typing `=>` every time can be a pain on the repl, so for simple blocks tulip provides a feature called **autoblocks** and the **autovar**.  Autoblocks are also delimited by square brackets, but contain only a single clause.  The autovar, denoted `$`, is the argument to the closest-nested autoblock:
 
 ``` tulip
 list > map [ some-fn $ arg ]
@@ -132,7 +132,7 @@ Things get a little more interesting when tagwords are combined with pattern-mat
 map f = [ .nil => .nil; .cons x xs => .cons (f x) (map f xs) ]
 ```
 
-To accompany the implicit "or" between clauses, `:` can be used as an "and" within a clause:
+Multiple patterns can be used in the same clause, separated by `:`, all bound to the same argument:
 
 ``` tulip
 foo = [ list : .cons head tail => do-stuff-with-both list head ]
@@ -157,7 +157,15 @@ add = [ (x : %uint) (y : %uint) => add-uint x y ]
 map (f:%callable) = ...
 ```
 
-All the native types will have `%`-sigiled type names, and there will be a way to implement your own named checks, which is still in design.
+All the native types will have `%`-sigiled type names, and there will be a way to implement your own named checks, which is still in design, but which will probably look something like:
+
+``` tulip
+@match %list [ .cons _ %list; .nil ]
+
+is-list = [ %list => .t; _ => .f ]
+```
+
+(That's an "or" between patterns, to complement the "and" that is `:`.)
 
 Patterns also have predicates on any part of the match that can use bound names from sub-matches:
 

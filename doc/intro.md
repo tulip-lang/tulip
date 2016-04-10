@@ -56,6 +56,34 @@ is equivalent to `bar foo baz`.  Alternately, you can bind a variable to a name 
 foo > x => bar > baz > add x
 ```
 
+## Lambdas
+
+It's expected that lambdas will be a common thing to type on the repl, so the syntax has been kept very lightweight.  A basic lambda looks like this:
+
+``` tulip
+[ foo => do-thing-to foo ]
+# multiple arguments
+[ foo bar baz => do-thing-to foo (pre-process bar) baz ]
+```
+
+where the variable `foo` is bound inside the block.  Nested blocks have the usual properties of closures.
+
+There's also a shortcut for defining lambdas and storing them in a variable name (named functions, in other words):
+
+``` tulip
+f x = do-thing-to x
+# ...is exactly equivalent to...
+f = [ x => do-thing-to x ]
+```
+
+Naming all the variables and typing `=>` every time can be a pain on the repl, so for simple blocks tulip provides a feature called **autoblocks** and the **autovar**.  Autoblocks are also delimited by square brackets, but contain only a single clause.  The autovar, denoted `$`, is the argument to the closest-nested autoblock:
+
+``` tulip
+list > map [ some-fn $ arg ]
+```
+
+Future plans may also include support for `$1`, `$2`, etc.
+
 ## Tagwords, Tuples
 
 Tagwords are the basic building block of all tulip's user-space data structures.  Syntactically, a tagword is simply an identifier sigiled with a `.`, as in `.foo`.  When a tagword is called as a function, it creates a **tagged value**.  When a tagged value is called as a function, it appends the data to its internal list.  Let's look at an example:
@@ -96,31 +124,48 @@ A **tuple** is multiple expressions joined with `,`, as in `foo bar > baz, zot`.
 
 This allows for open methods (see below) to be defined for arbitrary lengths of tuples.
 
-## Lambdas and patterns
+## Pattern-Matching
 
-It's expected that lambdas will be a common thing to type on the repl, so the syntax has been kept very lightweight.  A basic lambda looks like this:
-
-``` tulip
-[ foo => some-expr-in foo ]
-```
-
-where the variable `foo` is bound inside the block.  Nested blocks have the usual properties of closures.
-
-Things get a little more interesting with destructuring.  Rather than being a simple variable binder (`foo` above), the binder can also match and destructure tagged values over multiple clauses:
+Things get a little more interesting when tagwords are combined with pattern-matching in lambdas.  Rather than merely binding parameter names to argument values, lambdas can also pattern-match and destructure tagged values over multiple clauses:
 
 ``` tulip
 map f = [ .nil => .nil; .cons x xs => .cons (f x) (map f xs) ]
 ```
 
-The `:` symbol matches and binds multiple patterns over the same value.  Patterns can also include named pattern or type checks (sigiled with `%`).
+Multiple patterns can be used in the same clause, separated by `:`, all bound to the same argument:
+
+``` tulip
+foo = [ list : .cons head tail => do-stuff-with-both list head ]
+# ...or equivalently...
+foo (list : .cons head tail) = do-stuff-with-both list head
+```
+
+That's a one-argument lambda that binds three parameter names, one of which is just the argument and two of which are destructured from the argument.
+
+This is especially useful when you want to pattern-match _without_ destructuring:
+
+``` tulip
+foo (bar : .bar _ _) = ...
+# ...or equivalently...
+foo = [ bar : .bar _ _ => ... ]
+```
+
+There are also named patterns, which don't bind any parameters, such as type checks (sigiled with `%`):
 
 ``` tulip
 add = [ (x : %uint) (y : %uint) => add-uint x y ]
 map (f:%callable) = ...
-foo (bar : .bar _ _) = ...
 ```
 
-All the native types will have `%`-sigiled type names, and there will be a way to implement your own named checks, which is still in design.
+All the native types will have `%`-sigiled type names, and there will be a way to implement your own named checks, which is still in design, but which will probably look something like:
+
+``` tulip
+@match %list [ .cons _ %list; .nil ]
+
+is-list = [ %list => .t; _ => .f ]
+```
+
+(That's an "or" between patterns, to complement the "and" that is `:`.)
 
 Patterns also have predicates on any part of the match that can use bound names from sub-matches:
 
@@ -139,14 +184,6 @@ The special pattern `_` acts as usual - it matches any value and binds no result
 ``` tulip
 [ _? cond-1 => val-1; _? cond-2 => val-2 ]
 ```
-
-Naming all the variables and typing `=>` every time can be a pain on the repl, so for simple blocks tulip provides a feature called **autoblocks** and the **autovar**.  Autoblocks are also delimited by square brackets, but contain no pattern and only a single clause.  The autovar, denoted `$`, is the argument to the closest-nested autoblock:
-
-``` tulip
-list > map [ some-fn $ arg ]
-```
-
-Future plans may also include support for `$1`, `$2`, etc.
 
 ## Literals and Macros
 

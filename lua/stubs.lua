@@ -1,4 +1,4 @@
-string_reader = function(input)
+function string_reader(input)
   local state = {
     index = 0
   }
@@ -14,7 +14,7 @@ string_reader = function(input)
   end
 
   function input_name()
-    return 'input string <' .. input .. '>'
+    return '{input-string}'
   end
 
   return {
@@ -50,12 +50,19 @@ function tag(name, ...)
   return { tag = name, values = {...} }
 end
 
-function inspect_tag(t)
-  out = '.' .. t.tag
+function tag_get(obj, index)
+  -- TODO: error handling
+  return obj.values[index]
+end
 
-  for v in t.values do
+function inspect_tag(t)
+  out = '(.' .. t.tag
+
+  for _,v in pairs(t.values) do
     out = out .. ' ' .. inspect_value(v)
   end
+
+  return out .. ')'
 end
 
 function matches_tag(t, name, arity)
@@ -68,6 +75,7 @@ end
 function inspect_value(t)
   if type(t) == 'table' and t.tag then return inspect_tag(t)
   elseif type(t) == 'table' and t.tokid then return inspect_token(t)
+  elseif type(t) == 'string' then return '\'{' .. t .. '}'
   else return t
   end
 end
@@ -80,13 +88,28 @@ function Token(id, value, range)
   }
 end
 
+function inspect_loc(loc)
+  return loc.line .. ':' .. loc.column
+end
+
+function inspect_range(range)
+  return '<' .. range.start.input .. ':' ..
+          inspect_loc(range.start) .. '-' ..
+          inspect_loc(range.final)
+end
+
 function inspect_token(token)
   local name = token_names[token.tokid]
+  local range = inspect_range(token.range)
+  local raw = nil
+
   if token.value then
-    return name .. '(' .. token.value .. ')'
+    raw = name .. '(' .. token.value .. ')'
   else
-    return name
+    raw = name
   end
+
+  return raw .. '@' .. range
 end
 
 return {
@@ -94,5 +117,6 @@ return {
   inspect_skeletons = inspect_skeletons,
   inspect_value = inspect_value,
   tag = tag,
+  tag_get = tag_get,
   Token = Token,
 }

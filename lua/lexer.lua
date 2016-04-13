@@ -1,8 +1,11 @@
-Stubs = require 'lua/stubs'
+local Stubs = require 'lua/stubs'
+local Errors = require 'lua/errors'
 
-Token = Stubs.Token
+local error = function(...) return Errors.error('parse/lexer', ...) end
 
-token_names = {
+local Token = Stubs.Token
+
+local token_names = {
   "LPAREN",
   "RPAREN",
 
@@ -51,7 +54,7 @@ token_names = {
   "EOF"
 }
 
-token_ids = {}
+local token_ids = {}
 for index, name in ipairs(token_names) do
   token_ids[name] = index
 end
@@ -106,7 +109,9 @@ function new(stream)
   end
 
   function advance()
-    assert(state.uninitialized or state.head)
+    if not (state.uninitialized or state.head) then
+      error('unexpected EOF')
+    end
 
     state.index = state.index + 1
     if state.head == "\n" then

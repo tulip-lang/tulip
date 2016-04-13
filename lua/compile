@@ -1,11 +1,12 @@
 #!/usr/bin/env lua
 
-Stubs = require 'lua/stubs'
-Lexer = require 'lua/lexer'
-Skeleton = require 'lua/skeleton'
+local Stubs = require 'lua/stubs'
+local Lexer = require 'lua/lexer'
+local Skeleton = require 'lua/skeleton'
+local Errors = require 'lua/errors'
 
-string_reader = Stubs.string_reader
-parse_skeleton = Skeleton.parse_skeleton
+local string_reader = Stubs.string_reader
+local parse_skeleton = Skeleton.parse_skeleton
 
 while true do
   io.stdout:write('> ')
@@ -13,5 +14,15 @@ while true do
 
   if not input then break end
 
-  print(Skeleton.inspect(parse_skeleton(Lexer.new(string_reader(input)))))
+  local reader = string_reader(input)
+  local lexer = Lexer.new(reader)
+  local errors, skeleton = Errors.error_scope(function() return parse_skeleton(lexer) end)
+
+  if #errors == 0 then
+    print(Skeleton.inspect(skeleton))
+  else
+    for _,e in pairs(errors) do
+      print('error: ' .. Stubs.inspect_value(e))
+    end
+  end
 end

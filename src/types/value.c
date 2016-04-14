@@ -1,6 +1,10 @@
+// constructors and invariant checks for tulip-core's base value types
+// documented more rigorously in doc/core.org
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "types/value.h"
 
@@ -11,10 +15,11 @@ char* show_value(tulip_value v) {
       sprintf(str, "\"%s\"", v.literal.string);
       return str;
     } else if(v.literal.type == TULIP_LITERAL_NUMBER) {
-      char* str = malloc(sizeof(char) * 10); // length is arbitrary
-      snprintf(str, 10, "%g", v.literal.number);
+      char* str = malloc(sizeof(char) * 10);     // length is arbitrary
+      snprintf(str, 10, "%g", v.literal.number); // because this doesn't pad right
       return str;
     }
+    return "invalid literal";
   } else if (v.type == TULIP_VALUE_TAG) {
     if (0 < v.tag.length) {
       // todo implement tree printing
@@ -68,6 +73,7 @@ tulip_tag* append_tag(tulip_tag* t, tulip_value v) {
       t->contents[t->length] = v;
       t->length += 1;
     } else {
+      // todo better error handling
       printf("array resize failed");
     }
   } else {
@@ -76,4 +82,20 @@ tulip_tag* append_tag(tulip_tag* t, tulip_value v) {
   }
 
   return t;
+}
+
+bool validate_tag(tulip_value t) {
+  // failed malloc or constructor not used
+  if (t.tag.contents == NULL)
+    return false;
+
+  // pointer paranoia, the utility of this check is questionable
+  if (t.tag.contents == &t || t.tag.contents == &t.tag)
+    return false;
+
+  // name is either empty or \0
+  if (t.tag.name == NULL)
+    return false;
+
+  return true;
 }

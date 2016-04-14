@@ -1,23 +1,92 @@
-* SCHEDULE
-** abstract machine
-*** flat format
-**** TODO add Scope insertion to block and lambda
-*** rules
-**** TODO expand
-**** TODO reduce
-**** TODO branch
-* NOTES
-** abstract machine
-*** bindings
-- there are no cases where tags need to be bound
-- scopes also need to be deleted sometime, but we may need the process model to do that reliably -- dunno really i'm pretty sleepy
-- lets in blocks are bound sequentially (NOT EARLY)
-- jneen wants lambda to introduce a new scope, which makes sense but might require reworking the symbol tables
-- she also wants new scopes for each case alternative, motivated by her planned translation of pattern matching
-*** builtins
-+
--
-*
-/
-print
-pretty printing
+* schedule
+** TODO [2016-03-31 Thu] architecture
+*** DONE makefiles
+CLOSED: [2016-03-24 Thu 04:27]
+just a simple toplevel makefile should work fine
+*** TODO :compiler: file interface
+*** DONE :types: value representations
+CLOSED: [2016-03-24 Thu 04:27]
+*** DONE :types: less awkward tag implementation
+CLOSED: [2016-03-24 Thu 04:27]
+*** DONE :types: tulip-core specification
+CLOSED: [2016-03-24 Thu 04:27]
+** TODO [2016-04-30 Sat] compiler in progress
+*** TODO :compiler: static dependency loading
+compiler needs to return multiple asts, separate by module
+*** DONE :types: tulip-core validation
+CLOSED: [2016-04-14 Thu 00:32]
+*** TODO :runtime: mcjit lifetime
+*** TODO :runtime: generate initial symbol vectors from ast
+naively loads all of them
+*** TODO :runtime: first transform set
+- [ ] tulip types
+- [ ] lambdas, application
+- [ ] blocks
+  + closure tables (??)
+- [ ] branches
+  + llvm should handle collapsing
+  + phi resolution in blocks
+** TODO [2016-05-31 Tue] compiler working
+** TODO [2016-06-30 Thu] standard library in progress
+** TODO [2016-07-31 Sun] standard library working
+** TODO [2016-08-31 Wed] bulbs, docs, interactive widgets (?)
+** TODO [2016-09-30 Fri] strangeloop presentation and first release
+* architecture
+** interface
+*** file reader
+reads a file, exposes it as a stream, closes file when asked
+not very complicated
+*** repl
+this interface needs more planning
+** compiler
+the compiler receives a stream of characters from the interface, consumes that stream and builds a set of asts
+it resolves any static module dependencies and instantiates new file interfaces to read them
+it is currently not planned to work as a server, and should continue parsing until all static module dependencies have been loaded
+** runtime
+*** process manager
+maintains a pool of processes and runs them concurrently
+the process manager invokes tracer heuristics on process splits and on function (co)recursion
+**** processes
+each process contains its own scope, and needs to signal its blocking state to the manager
+processes may or may not be compiled, and are tagged with their optimization state
+**** garbage collector
+occasionally interrupts the process pool to collect unreferenced processes or compress suspiciously large scopes
+the gc will need a fairly clever strategy for recognizing orphaned processes
+*** tracer
+heuristics to determine if and how a cfg can be collapsed
+performs transform rules, hosts mcjit and its symbol tables
+*** transforms
+set of rules to convert tulip ast to llvm ssa form
+may be divided into tracing contexts, or written as combinators
+* module/file layout
+** /
+*** src/
+**** main.c
+argument parsing
+only needs to load a target file, connect it to the compiler, pass result to the runtime
+**** types/
+***** value.h
+canonical c repr for all tulip types
+***** tag.c/h
+special logic for constructing tags and tag trees
+***** core.c/h
+specification of tulip-core ast as a tag tree
+validator??
+**** interface/
+***** file.c/h
+load files, very simple
+**** compiler/
+***** host.c/h
+isolate lua dependency here
+solely responsible for loading the lua interpreter and invoking the compiler
+***** lua source files
+parse tokens, locate and load static dependencies, return ast set
+**** runtime/
+layout here is pretty fuzzy until we plan tracing/processes in more detail
+***** tracer/
+optimization rules
+***** transform/
+ast -> ssa alchemy
+***** ???
+it is a mystery
+* notes

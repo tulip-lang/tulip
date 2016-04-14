@@ -1,4 +1,4 @@
-cflags = --std=c11 -Isrc/ -g
+cflags = --std=c11 -Isrc/ -g -lm
 
 .PHONY: build run clean
 
@@ -9,4 +9,4 @@ clean:
 	rm build/**
 
 types:
-	clang $(cflags) src/types/core.c src/types/value.c src/types/scaffold.c -o build/tag
+	clang $(cflags) src/types/core.c src/types/value.c src/types/scaffold.c -o build/core

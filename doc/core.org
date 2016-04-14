@@ -1,0 +1,60 @@
+* desc
+this document describes the tulip-core intermediate representation and its invariants
+* types
+** nodes
+*** literal
+*** name
+*** tag
+*** let
+*** apply
+*** block
+*** branch
+*** builtin
+** complex
+*** cons
+* invariants
+** toplevel
+** cons
+head (=.tag.contents[0]=) is not a cons
+head (=.tag.contents[0]=) is valid
+tail (=.tag.contents[1]=) is either nil or a valid cons
+** literal
+value (=.tag.contents[0]=) must be a TULIP_VALUE_LITERAL
+if the literal is a string, string must not be NULL
+** name
+name (=.tag.contents[0]=) must be a TULIP_VALUE_LITERAL and TULIP_LITERAL_STRING
+name (=.tag.contents[0].literal.string=) must not be NULL
+** tag
+*** runtime
+arguments (=.tag.contents=) must not be a pointer to self and must not be NULL
+.tag.name must not be empty
+*** ast
+name (=.tag.contents[0]=) must be a TULIP_VALUE_LITERAL and TULIP_LITERAL_STRING
+name (=.tag.contents[0].literal.string=) must not be NULL
+arguments (=.tag.contents[1]=) must be a valid cons
+** let
+bind (=.tag.contents[0]=) must be a valid name
+definition (=.tag.contents[1]=) must not be another let
+definition (=.tag.contents[1]=) must be valid
+** builtin
+builtin_name (=.tag.contents[0]=) must not be NULL
+arity (=.tag.contents[1]=) must be a TULIP_VALUE_LITERAL and TULIP_VALUE_NUMBER
+arity (=.tag.contents[1].literal.number=) must be greater than 0 and an integer
+contents (=.tag.contents[2]=) must be a valid cons
+** lambda
+bind (=.tag.contents[0]=) must be a valid name
+body (=.tag.contents[1]=) must be valid
+body (=.tag.contents[1]=) must not be a let
+** block
+chain (=.tag.contents[0]=) must be a valid cons
+** branch
+predicates (=.tag.contents[0]=) must be a valid cons
+consequences (=.tag.contents[1]=) must be a valid cons
+** apply
+call (=.tag.contents[0]=) must not be a literal
+args (=.tag.contents[1]=) must be a valid cons
+* notes
+** security
+strings are basically assumed to be safe
+my use of memcpy is an obvious target for starting a spray
+we should consider adding some safety checks before copies a few months from now

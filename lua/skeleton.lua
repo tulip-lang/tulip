@@ -14,45 +14,11 @@ eats_preceding_newline = {
   [token_ids.RBRACE]   = true,
 }
 
-function tag(name, ...)
-  return { tag = name, values = {...} }
-end
-
 function parse_skeleton(lexer)
   lexer.setup()
   local parsed = _parse_sequence(lexer, nil, 0)
   lexer.teardown()
   return parsed
-end
-
-function inspect_skeletons(skeletons)
-  local out = {}
-  for k,v in pairs(skeletons) do
-    out[k] = inspect_one(v)
-  end
-
-  return table.concat(out, ' ')
-end
-
-function inspect_one(skel)
-  if skel.tag == 'nested' then
-    local open, close, body = unpack(skel.values)
-     return '[' .. inspect_token(open) .. ': ' .. inspect_skeletons(body) .. ' :' .. inspect_token(close) .. ']'
-  elseif skel.tag == 'token' then
-    local token = unpack(skel.values)
-    return inspect_token(token)
-  else
-    error('bad skeleton')
-  end
-end
-
-function inspect_token(token)
-  name = token_names[token.tokid]
-  if token.value then
-    return name .. '(' .. token.value .. ')'
-  else
-    return name
-  end
 end
 
 function is_closing(tok)
@@ -89,6 +55,8 @@ function _parse_sequence(lexer, open_tok, expected_close_id)
       else
         unexpected(tok, 'invalid nesting from the beginning')
       end
+    elseif tok.tokid == token_ids.LT then
+      table.insert(elements, _parse_sequence(lexer, tok, token_ids.GT))
     elseif tok.tokid == token_ids.LPAREN then
       table.insert(elements, _parse_sequence(lexer, tok, token_ids.RPAREN))
     elseif tok.tokid == token_ids.LBRACK or tok.tokid == token_ids.MACRO then
@@ -101,6 +69,11 @@ function _parse_sequence(lexer, open_tok, expected_close_id)
       -- pass
     else
       table.insert(elements, tag('token', tok))
+
+      if tok.tokid == token_ids.GT then
+        -- manually skip NL tokens here, since the lexer can't for <...>
+        while lexer.peek().tokid == token_ids.NL do lexer.next() end
+      end
     end
   end
 end

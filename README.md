@@ -25,7 +25,9 @@ For more details, please read the blog post linked above.
 
 A language is a very large project, and I need your help!  Especially if you are queer/trans, disabled, a woman, and/or a person of color, and in that case especially if you think you don't know anything about compilers.  I feel a little conflicted asking for this kind of help because I can't pay anyone (nor am I getting paid), so please don't feel guilty at all if you simply don't have the time or energy for it.  But I think it's a super cool project, and it is much more likely to be successful with your help.
 
-Tulip is still very much in design mode, so the architecture is still being decided on.  I hang out with a few others in `#tuliplang` on freenode if you want to see where you can best contribute.  Here are some specific things I'll need help with:
+Tulip is still very much in design mode, so the architecture is still being decided on.  I hang out with a few others in `#tulip` on [Snek][] if you want to see where you can best contribute.  Here are some specific things I'll need help with:
+
+[Snek]: http://snek.translunar.space/ 
 
 * Design / implementation of the macro definition and parsing system, in lua
 * Implementation of modules / imports (pure design plus maybe some C)

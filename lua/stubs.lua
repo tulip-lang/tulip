@@ -95,7 +95,7 @@ end
 function inspect_range(range)
   return '<' .. range.start.input .. ':' ..
           inspect_loc(range.start) .. '-' ..
-          inspect_loc(range.final)
+          inspect_loc(range.final) .. '>'
 end
 
 function inspect_token(token)

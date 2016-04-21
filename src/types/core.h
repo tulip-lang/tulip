@@ -4,6 +4,8 @@
 
 #include "types/value.h"
 
+#pragma once
+
 tulip_value cons(tulip_value* array, int length);
 bool validate_cons(tulip_value subject);
 tulip_value block(tulip_value* contents, int length);

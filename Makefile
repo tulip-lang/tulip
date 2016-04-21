@@ -1,12 +1,14 @@
-cflags = --std=c11 -Isrc/ -g -lm
+cflags = --std=c11 -Isrc/ -g -lm -lLLVM
+srcs   = src/types/core.c src/types/value.c src/runtime/init.c src/main.c
 
 .PHONY: build run clean
 
 build: types
 run:
-	./build/tag
+	./build/rt
 clean:
 	rm build/**
 
+# TODO smarter makefile
 types:
-	clang $(cflags) src/types/core.c src/types/value.c src/types/scaffold.c -o build/core
+	clang $(cflags) $(srcs) -o build/rt

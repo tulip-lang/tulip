@@ -15,7 +15,8 @@ CLOSED: [2016-03-24 Thu 04:27]
 compiler needs to return multiple asts, separate by module
 *** DONE :types: tulip-core validation
 CLOSED: [2016-04-14 Thu 00:32]
-*** TODO :runtime: mcjit lifetime
+*** DONE :runtime: mcjit lifetime
+CLOSED: [2016-04-20 Wed 19:04]
 *** TODO :runtime: generate initial symbol vectors from ast
 naively loads all of them
 *** TODO :runtime: first transform set

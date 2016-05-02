@@ -48,6 +48,7 @@ local token_names = {
   "INT",
   "NAME",
   "STRING",
+  "DQUOTE",
 
   "EOF"
 }
@@ -229,6 +230,25 @@ function new(stream)
     end
   end
 
+  function process_double_quote()
+    record()
+    while true do
+      if state.head == '\\' then
+        advance()
+      elseif state.head == '"' then
+        end_record()
+        advance()
+        break
+      elseif not state.head then
+        error('unmatched double quote')
+      end
+
+      advance()
+    end
+
+    end_record()
+  end
+
   function process_root()
     if not state.head then return token_ids.EOF end
 
@@ -280,6 +300,13 @@ function new(stream)
         record_ident()
         return token_ids.STRING
       end
+    end
+
+    if state.head == '"' then
+      advance()
+
+      process_double_quote()
+      return token_ids.DQUOTE
     end
 
     if state.head == '`' then

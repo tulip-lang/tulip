@@ -1,8 +1,6 @@
 local Stubs = require 'lua/stubs'
 local Errors = require 'lua/errors'
 
-local error = function(...) return Errors.error('parse/lexer', ...) end
-
 local Token = Stubs.Token
 
 local token_names = {
@@ -106,6 +104,10 @@ function new(stream)
       line = state.line,
       column = state.column
     }
+  end
+
+  function error(...)
+    return Errors.error('parse/lexer', ...)
   end
 
   function advance()

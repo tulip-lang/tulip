@@ -162,7 +162,7 @@ function new(stream)
     local value = recorded_value()
     local final = final_loc()
 
-    assert(token == token_ids.EOF or state.index ~= start.index, 'must advance the stream!')
+    assert(token == token_ids.EOF or state.index ~= start.index, 'must advance the stream! (at ' .. start.index .. ')')
 
     return Token(token, value, { start = start, final = final })
   end

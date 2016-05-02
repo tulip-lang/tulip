@@ -9,4 +9,5 @@ clean:
 	rm build/**
 
 types:
+	mkdir -p build
 	clang $(cflags) src/types/core.c src/types/value.c src/types/scaffold.c -o build/core

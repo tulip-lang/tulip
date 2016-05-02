@@ -524,7 +524,11 @@ end
 function is_ident_char(char)
   if not char then return false end
 
-  return is_alpha(char) or is_digit(char) or char == '-' or char == '_'
+  return is_alpha(char) or
+         is_digit(char) or
+         char == '-' or
+         char == '_' or
+         char == '/'
 end
 
 function is_immediate(char)

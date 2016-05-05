@@ -4,6 +4,7 @@ local Stubs = require 'lua/stubs'
 local Lexer = require 'lua/lexer'
 local Skeleton = require 'lua/skeleton'
 local Errors = require 'lua/errors'
+local Macros = require 'lua/macros'
 
 local string_reader = Stubs.string_reader
 local parse_skeleton = Skeleton.parse_skeleton
@@ -16,10 +17,15 @@ while true do
 
   local reader = string_reader(input)
   local lexer = Lexer.new(reader)
-  local errors, skeleton = Errors.error_scope(function() return parse_skeleton(lexer) end)
+  local out = {}
+  local errors, _ = Errors.error_scope(function()
+    out.skel = parse_skeleton(lexer)
+    out.expanded = Macros.macro_expand(out.skel)
+  end)
 
   if #errors == 0 then
-    print(Skeleton.inspect(skeleton))
+    print('parsed: ' .. Stubs.inspect_skeletons(out.skel))
+    print('expanded: ' .. Stubs.inspect_skeletons(out.expanded))
   else
     for _,e in pairs(errors) do
       print('error: ' .. Stubs.inspect_value(e))

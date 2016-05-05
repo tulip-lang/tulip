@@ -37,7 +37,7 @@ end
 function inspect_one(skel)
   if skel.tag == 'nested' then
     local open, close, body = unpack(skel.values)
-     return '[' .. inspect_token(open) .. ': ' .. inspect_skeletons(body) .. ' :' .. inspect_token(close) .. ']'
+      return '[' .. inspect_token(open) .. ': ' .. inspect_skeletons(body) .. ' :' .. inspect_token(close) .. ']'
   elseif skel.tag == 'token' then
     local token = unpack(skel.values)
     return inspect_token(token)
@@ -52,11 +52,11 @@ end
 
 function tag_get(obj, index)
   -- TODO: error handling
-  return obj.values[index]
+  return obj.values[index+1]
 end
 
 function inspect_tag(t)
-  out = '(.' .. t.tag
+  local out = '(.' .. t.tag
 
   for _,v in pairs(t.values) do
     out = out .. ' ' .. inspect_value(v)
@@ -72,11 +72,28 @@ function matches_tag(t, name, arity)
   return true
 end
 
+-- Print contents of `tbl`, with indentation.
+-- `indent` sets the initial level of indentation.
+function tprint (tbl, indent)
+  if not indent then indent = 0 end
+  for k, v in pairs(tbl) do
+    formatting = string.rep("  ", indent) .. k .. ": "
+    if type(v) == "table" then
+      print(formatting)
+      tprint(v, indent+1)
+    else
+      print(formatting .. v)
+    end
+  end
+end
+
 function inspect_value(t)
   if type(t) == 'table' and t.tag then return inspect_tag(t)
   elseif type(t) == 'table' and t.tokid then return inspect_token(t)
   elseif type(t) == 'string' then return '\'{' .. t .. '}'
-  else return t
+  else
+    print('something else')
+    return tostring(t)
   end
 end
 
@@ -93,6 +110,8 @@ function inspect_loc(loc)
 end
 
 function inspect_range(range)
+  if range == '<synthetic>' then return '' end
+
   return '<' .. range.start.input .. ':' ..
           inspect_loc(range.start) .. '-' ..
           inspect_loc(range.final) .. '>'

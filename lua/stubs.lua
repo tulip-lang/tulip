@@ -26,12 +26,12 @@ function string_reader(input)
 end
 
 function inspect_skeletons(skeletons)
-  local out = {}
-  for k,v in pairs(skeletons) do
-    out[k] = inspect_one(v)
-  end
+  print(skeletons, skeletons.tag, #skeletons)
+  local inspects = List.map(skeletons, function(skel)
+    return inspect_one(skel)
+  end)
 
-  return table.concat(out, ' ')
+  return List.join(inspects, ' ')
 end
 
 function inspect_one(skel)
@@ -55,7 +55,26 @@ function tag_get(obj, index)
   return obj.values[index+1]
 end
 
+function inspect_list(list)
+  local out = '\\list('
+
+  while matches_tag(list, 'cons', 2) do
+    -- HACK
+    if out ~= '\\list(' then out = out .. ' ' end
+
+    out = out .. inspect_value(tag_get(list, 0))
+    list = tag_get(list, 1)
+  end
+
+  out = out .. ')'
+end
+
 function inspect_tag(t)
+  if matches_tag(t, 'cons', 2)
+     or matches_tag(t, 'nil', 0) then
+    return inspect_list(t)
+  end
+
   local out = '(.' .. t.tag
 
   for _,v in pairs(t.values) do
@@ -66,25 +85,10 @@ function inspect_tag(t)
 end
 
 function matches_tag(t, name, arity)
-  if not type(t) == 'table' then return false end
-  if not t.tag == name then return false end
-  if not #t.values == arity then return false end
+  if not (type(t) == 'table') then return false end
+  if not (t.tag == name) then return false end
+  if not (#t.values == arity) then return false end
   return true
-end
-
--- Print contents of `tbl`, with indentation.
--- `indent` sets the initial level of indentation.
-function tprint (tbl, indent)
-  if not indent then indent = 0 end
-  for k, v in pairs(tbl) do
-    formatting = string.rep("  ", indent) .. k .. ": "
-    if type(v) == "table" then
-      print(formatting)
-      tprint(v, indent+1)
-    else
-      print(formatting .. v)
-    end
-  end
 end
 
 function inspect_value(t)
@@ -92,7 +96,6 @@ function inspect_value(t)
   elseif type(t) == 'table' and t.tokid then return inspect_token(t)
   elseif type(t) == 'string' then return '\'{' .. t .. '}'
   else
-    print('something else')
     return tostring(t)
   end
 end
@@ -135,6 +138,7 @@ return {
   string_reader = string_reader,
   inspect_skeletons = inspect_skeletons,
   inspect_value = inspect_value,
+  matches_tag = matches_tag,
   tag = tag,
   tag_get = tag_get,
   Token = Token,

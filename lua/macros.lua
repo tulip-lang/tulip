@@ -1,6 +1,7 @@
 local Stubs = require 'lua/stubs'
 local Lexer = require 'lua/lexer'
 local Skeleton = require 'lua/skeleton'
+local List = require 'lua/list'
 
 local tag = Stubs.tag
 local tag_get = Stubs.tag_get
@@ -23,12 +24,12 @@ end
 define_builtin_macro('list', function(skels)
   local out = tag('token', tok('TAGGED', 'nil'))
 
-  for i = #skels,1,-1 do
+  List.each(skels, function(skel)
     out = tag('nested', tok('LPAREN', nil), tok('RPAREN', nil),
-              {tag('token', tok('TAGGED', 'cons')),
-               skels[i],
+              list{tag('token', tok('TAGGED', 'cons')),
+               skel,
                out})
-  end
+  end)
 
   return out
 end)
@@ -63,23 +64,20 @@ function macro_expand(skels)
 end
 
 function replace_macros(skels)
-  local out = {}
-  for _,skel in ipairs(skels) do
+  return List.map(skels, function(skel)
     local macro_name = macro_use(skel)
 
     if macro_name then
       found_macro_state.value = true
-      table.insert(out, macro_registry[macro_name](tag_get(skel, 2)))
+      return macro_registry[macro_name](tag_get(skel, 2))
     elseif skel.tag == 'nested' then
-      table.insert(out, tag('nested', tag_get(skel, 0),
-                                      tag_get(skel, 1),
-                                      replace_macros(tag_get(skel, 2))))
+      return tag('nested', tag_get(skel, 0),
+                           tag_get(skel, 1),
+                           replace_macros(tag_get(skel, 2)))
     else
-      table.insert(out, skel)
+      return skel
     end
-  end
-
-  return out
+  end)
 end
 
 return {

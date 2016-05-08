@@ -1,7 +1,6 @@
-Lexer = require('lua/lexer')
-Errors = require('lua/errors')
-
-error = Errors.error
+local Lexer = require('lua/lexer')
+local Errors = require('lua/errors')
+local List = require('lua/list')
 
 token_ids   = Lexer.token_ids
 token_names = Lexer.token_names
@@ -32,12 +31,12 @@ end
 
 function unexpected(token, matching, message)
   print('unexpected', token, message)
-  return tag('error', error('parse/unexpected', token, matching, message))
+  return tag('error', Errors.error('parse/unexpected', token, matching, message))
 end
 
 function unmatched(token, message)
   print('unmatched', token, message)
-  return tag('error', error('parse/unmatched', token, message))
+  return tag('error', Errors.error('parse/unmatched', token, message))
 end
 
 function _parse_sequence(lexer, open_tok, expected_close_id)
@@ -52,10 +51,10 @@ function _parse_sequence(lexer, open_tok, expected_close_id)
       if open_tok then
         return unmatched(open_tok, token_names[expected_close_id])
       else
-        return elements
+        return List.list(elements)
       end
     elseif open_tok and tok.tokid == expected_close_id then
-      return tag('nested', open_tok, tok, elements)
+      return tag('nested', open_tok, tok, List.list(elements))
     elseif is_closing(tok) then
       if open_tok then
         return unexpected(tok, tag('some', open_tok), 'invalid nesting')

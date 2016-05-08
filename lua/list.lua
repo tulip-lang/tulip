@@ -33,21 +33,6 @@ function list(tbl)
   return out
 end
 
--- Print contents of `tbl`, with indentation.
--- `indent` sets the initial level of indentation.
-function tprint (tbl, indent)
-  if not indent then indent = 0 end
-  for k, v in pairs(tbl) do
-    formatting = string.rep("  ", indent) .. k .. ": "
-    if type(v) == "table" then
-      print(formatting)
-      tprint(v, indent+1)
-    else
-      print(formatting .. v)
-    end
-  end
-end
-
 function each(list, fn)
   while matches_tag(list, 'cons', 2) do
     fn(head(list))
@@ -79,7 +64,6 @@ function join(list, join_str)
   local out = head(list)
 
   each(tail(list), function(el)
-    print('join each', out)
     out = out .. join_str .. el
   end)
 

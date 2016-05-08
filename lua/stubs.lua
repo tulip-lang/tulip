@@ -26,7 +26,6 @@ function string_reader(input)
 end
 
 function inspect_skeletons(skeletons)
-  print(skeletons, skeletons.tag, #skeletons)
   local inspects = List.map(skeletons, function(skel)
     return inspect_one(skel)
   end)

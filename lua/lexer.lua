@@ -245,8 +245,6 @@ function new(stream)
 
       advance()
     end
-
-    end_record()
   end
 
   function process_root()
@@ -556,15 +554,6 @@ function is_ident_char(char)
          char == '-' or
          char == '_' or
          char == '/'
-end
-
-function is_immediate(char)
-  if is_ws(char) then return false end
-  if is_alpha(char) then return true end
-  if char == ')' or char == ']' or char == '}' then return true end
-  if char == '$' or char == '-' then return true end
-
-  return false
 end
 
 return {

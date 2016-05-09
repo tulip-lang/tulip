@@ -58,7 +58,38 @@ for index, name in ipairs(token_names) do
   token_ids[name] = index
 end
 
-function new(stream)
+local function is_nl(char)
+  if not char then return false end
+  return char == '\r' or char == '\n' or char == ';'
+end
+
+local function is_ws(char)
+  if not char then return false end
+  return char == ' ' or char == '\t'
+end
+
+local function is_alpha(char)
+  if not char then return false end
+  return ('a' <= char and char <= 'z') or
+         ('A' <= char and char <= 'Z')
+end
+
+local function is_digit(char)
+  if not char then return false end
+  return ('0' <= char and char <= '9')
+end
+
+local function is_ident_char(char)
+  if not char then return false end
+
+  return is_alpha(char) or
+         is_digit(char) or
+         char == '-' or
+         char == '_' or
+         char == '/'
+end
+
+local function new(stream)
   local state = {
     index = 0,
     line = 0,
@@ -71,6 +102,28 @@ function new(stream)
     peek = nil,
     final_loc = nil,
   }
+
+  -- what the fuck lua
+  local setup,
+        teardown,
+        reset,
+        recorded_value,
+        current_location,
+        error,
+        advance,
+        record,
+        end_record,
+        end_loc,
+        final_loc,
+        next,
+        peek,
+        skip_ws,
+        advance_through_ws,
+        skip_lines,
+        record_ident,
+        advance_through_string,
+        process_double_quote,
+        process_root
 
   function setup()
     stream.setup()
@@ -523,37 +576,6 @@ function new(stream)
     next = next,
     peek = peek
   }
-end
-
-function is_nl(char)
-  if not char then return false end
-  return char == '\r' or char == '\n' or char == ';'
-end
-
-function is_ws(char)
-  if not char then return false end
-  return char == ' ' or char == '\t'
-end
-
-function is_alpha(char)
-  if not char then return false end
-  return ('a' <= char and char <= 'z') or
-         ('A' <= char and char <= 'Z')
-end
-
-function is_digit(char)
-  if not char then return false end
-  return ('0' <= char and char <= '9')
-end
-
-function is_ident_char(char)
-  if not char then return false end
-
-  return is_alpha(char) or
-         is_digit(char) or
-         char == '-' or
-         char == '_' or
-         char == '/'
 end
 
 return {

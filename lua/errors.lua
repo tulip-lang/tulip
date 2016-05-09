@@ -1,8 +1,8 @@
-Stubs = require('lua/stubs')
+local Stubs = require('lua/stubs')
 
 local state = {}
 
-function error_scope(fn)
+local function error_scope(fn)
   local errors = {}
   local orig_errors = state.errors
   state.errors = errors
@@ -12,7 +12,7 @@ function error_scope(fn)
   return errors, out
 end
 
-function error(error_tag, ...)
+local function error(error_tag, ...)
   error_obj = Stubs.tag(error_tag, ...)
   table.insert(state.errors, error_obj)
   return error_obj

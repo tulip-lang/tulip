@@ -40,10 +40,6 @@ local function each(list, fn)
   end
 end
 
-local function reverse(list)
-  return map_reverse(list, function(x) return x end)
-end
-
 local function map_reverse(list, fn)
   local out = empty
 
@@ -52,6 +48,10 @@ local function map_reverse(list, fn)
   end)
 
   return out
+end
+
+local function reverse(list)
+  return map_reverse(list, function(x) return x end)
 end
 
 local function map(list, fn)
@@ -69,6 +69,13 @@ local function join(list, join_str)
 
   return out
 end
+
+Stubs.impl_inspect_tag('nil', 0, function() return '\\list()' end)
+Stubs.impl_inspect_tag('cons', 2, function(head, tail)
+  local inspects = map(cons(head, tail), Stubs.inspect_value)
+
+  return '\\list(' .. join(inspects, ' ') .. ')'
+end)
 
 _G.List = {
   list = list,

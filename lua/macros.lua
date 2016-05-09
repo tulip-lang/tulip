@@ -26,9 +26,9 @@ define_builtin_macro('list', function(skels)
 
   List.each(skels, function(skel)
     out = tag('skeleton/nested', tok('LPAREN', nil), tok('RPAREN', nil),
-              list{tag('token', tok('TAGGED', 'cons')),
-               skel,
-               out})
+              List.list{tag('token', tok('TAGGED', 'cons')),
+                        skel,
+                        out})
   end)
 
   return out

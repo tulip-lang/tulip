@@ -1,3 +1,4 @@
+local Stubs = require('lua/stubs')
 local Lexer = require('lua/lexer')
 local Errors = require('lua/errors')
 local List = require('lua/list')

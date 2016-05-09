@@ -3,34 +3,27 @@ local Stubs = require 'lua/stubs'
 local empty = tag('nil')
 local tag = Stubs.tag
 
-Stubs.impl_inspect_tag('nil', 0, function() return '\\list()' end)
-Stubs.impl_inspect_tag('cons', 2, function(head, tail)
-  local inspects = map(cons(head, tail), Stubs.inspect_value)
-
-  return '\\list(' .. join(inspects, ' ') .. ')'
-end)
-
-function cons(head, tail)
+local function cons(head, tail)
   return tag('cons', head, tail)
 end
 
-function is_cons(list)
+local function is_cons(list)
   return Stubs.matches_tag(list, 'cons', 2)
 end
 
-function is_nil(list)
+local function is_nil(list)
   return Stubs.matches_tag(list, 'nil', 0)
 end
 
-function head(list)
+local function head(list)
   return tag_get(list, 0)
 end
 
-function tail(list)
+local function tail(list)
   return tag_get(list, 1)
 end
 
-function list(tbl)
+local function list(tbl)
   local out = empty
 
   for i = #tbl,1,-1 do
@@ -40,18 +33,18 @@ function list(tbl)
   return out
 end
 
-function each(list, fn)
+local function each(list, fn)
   while matches_tag(list, 'cons', 2) do
     fn(head(list))
     list = tail(list)
   end
 end
 
-function reverse(list)
+local function reverse(list)
   return map_reverse(list, function(x) return x end)
 end
 
-function map_reverse(list, fn)
+local function map_reverse(list, fn)
   local out = empty
 
   each(list, function(el)
@@ -61,11 +54,11 @@ function map_reverse(list, fn)
   return out
 end
 
-function map(list, fn)
+local function map(list, fn)
   return reverse(map_reverse(list, fn))
 end
 
-function join(list, join_str)
+local function join(list, join_str)
   if is_nil(list) then return '' end
 
   local out = head(list)

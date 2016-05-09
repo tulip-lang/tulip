@@ -24,8 +24,8 @@ while true do
   end)
 
   if #errors == 0 then
-    print('parsed: ' .. Stubs.inspect_skeletons(out.skel))
-    print('expanded: ' .. Stubs.inspect_skeletons(out.expanded))
+    print('parsed: ' .. Stubs.inspect_value(out.skel))
+    print('expanded: ' .. Stubs.inspect_value(out.expanded))
   else
     for _,e in pairs(errors) do
       print('error: ' .. Stubs.inspect_value(e))

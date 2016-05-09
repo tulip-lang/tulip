@@ -25,26 +25,6 @@ function string_reader(input)
   }
 end
 
-function inspect_skeletons(skeletons)
-  local inspects = List.map(skeletons, function(skel)
-    return inspect_one(skel)
-  end)
-
-  return List.join(inspects, ' ')
-end
-
-function inspect_one(skel)
-  if skel.tag == 'nested' then
-    local open, close, body = unpack(skel.values)
-      return '[' .. inspect_token(open) .. ': ' .. inspect_skeletons(body) .. ' :' .. inspect_token(close) .. ']'
-  elseif skel.tag == 'token' then
-    local token = unpack(skel.values)
-    return inspect_token(token)
-  else
-    error('bad skeleton')
-  end
-end
-
 function tag(name, ...)
   return { tag = name, values = {...} }
 end
@@ -54,25 +34,17 @@ function tag_get(obj, index)
   return obj.values[index+1]
 end
 
-function inspect_list(list)
-  local out = '\\list('
+local tag_inspectors = {}
 
-  while matches_tag(list, 'cons', 2) do
-    -- HACK
-    if out ~= '\\list(' then out = out .. ' ' end
+function tag_key(name, arity) return name .. '@' .. tostring(arity) end
 
-    out = out .. inspect_value(tag_get(list, 0))
-    list = tag_get(list, 1)
-  end
-
-  out = out .. ')'
+function impl_inspect_tag(name, arity, impl)
+  tag_inspectors[tag_key(name, arity)] = impl
 end
 
 function inspect_tag(t)
-  if matches_tag(t, 'cons', 2)
-     or matches_tag(t, 'nil', 0) then
-    return inspect_list(t)
-  end
+  local dyn_impl = tag_inspectors[tag_key(t.tag, #t.values)]
+  if dyn_impl then return dyn_impl(unpack(t.values)) end
 
   local out = '(.' .. t.tag
 
@@ -141,4 +113,5 @@ return {
   tag = tag,
   tag_get = tag_get,
   Token = Token,
+  impl_inspect_tag = impl_inspect_tag,
 }

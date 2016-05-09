@@ -3,6 +3,13 @@ local Stubs = require 'lua/stubs'
 local empty = tag('nil')
 local tag = Stubs.tag
 
+Stubs.impl_inspect_tag('nil', 0, function() return '\\list()' end)
+Stubs.impl_inspect_tag('cons', 2, function(head, tail)
+  local inspects = map(cons(head, tail), Stubs.inspect_value)
+
+  return '\\list(' .. join(inspects, ' ') .. ')'
+end)
+
 function cons(head, tail)
   return tag('cons', head, tail)
 end

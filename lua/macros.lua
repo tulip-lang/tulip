@@ -25,7 +25,7 @@ define_builtin_macro('list', function(skels)
   local out = tag('token', tok('TAGGED', 'nil'))
 
   List.each(skels, function(skel)
-    out = tag('nested', tok('LPAREN', nil), tok('RPAREN', nil),
+    out = tag('skeleton/nested', tok('LPAREN', nil), tok('RPAREN', nil),
               list{tag('token', tok('TAGGED', 'cons')),
                skel,
                out})
@@ -35,7 +35,7 @@ define_builtin_macro('list', function(skels)
 end)
 
 function macro_use(skel)
-  if not matches_tag(skel, 'nested', 3) then return nil end
+  if not matches_tag(skel, 'skeleton/nested', 3) then return nil end
   local open_tok = tag_get(skel, 0)
 
   if open_tok.tokid == Lexer.token_ids.MACRO then

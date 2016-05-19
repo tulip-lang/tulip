@@ -1,3 +1,5 @@
+-- TODO: pass this into the compile function as a
+-- file or string reader
 function string_reader(input)
   local state = {
     index = 0
@@ -25,12 +27,13 @@ function string_reader(input)
   }
 end
 
+-- TODO implement in C
 function tag(name, ...)
   return { tag = name, values = {...} }
 end
 
+-- TODO implement in C
 function tag_get(obj, index)
-  -- TODO: error handling
   return obj.values[index+1]
 end
 
@@ -55,6 +58,7 @@ function inspect_tag(t)
   return out .. ')'
 end
 
+-- TODO implement in C
 function matches_tag(t, name, arity)
   if not (type(t) == 'table') then return false end
   if not (t.tag == name) then return false end
@@ -62,6 +66,7 @@ function matches_tag(t, name, arity)
   return true
 end
 
+-- TODO implement in C
 function inspect_value(t)
   if type(t) == 'table' and t.tag then return inspect_tag(t)
   elseif type(t) == 'table' and t.tokid then return inspect_token(t)

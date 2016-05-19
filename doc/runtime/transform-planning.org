@@ -1,0 +1,77 @@
+* builtins
+
+* block
+** sequencing
+*** desc
+blocks generate very straightforward "basic blocks", that sequentially include the representation of their arguments
+no labelling is necessary for blocks in particular
+most transforms that flatten or unroll sequences can be easily performed by llvm
+*** TODO core
+*** TODO ir
+** closure
+*** desc
+the runtime generates a binding table as a data-section-like header for each block, but only if bindings are present
+*** core
+<block [ <let x <literal 2>>
+       , <apply <builtin print/1> [<name x>]>
+       ]>
+*** analysis rules
+if { block `contains` let }
+*** ir
+- malloc
+  + c struct for (llvm-module, scope) ??
+- block execution is a function that takes a host pointer to its closure table
+- pointer bound to a privileged symbol within the 
+* application
+** thunking behaviour
+*** desc
+bindings to functions do not necessarily need to expose the arity of a function, but if they do not, an eager unthunking process must be used to permit implicit currying of application
+*** core
+<block [<let <name f> <lambda <name x> <lambda <name y> <name x>>
+** calling convention
+*** desc
+tulip uses the c calling convention, purely for ease of future ffi interop
+*** ir
+llvm makes calling convention specialization fairly easy, it is just an annotation on each function-like construct
+* lambda
+** closure generation
+*** desc
+lambdas generate a closure but restricted to one binding
+*** opt potential
+flatting multiple lambda closures into one is an easy optimization, and only requires unique symbol names for each level of binding
+it may also be possible to take a <lambda <name x> <block [<apply <name x>]>> structure and flatten it to a single closure easily
+* binding
+** let semantics
+*** desc
+binding a value to a (statically mangled) name appends (or updates) the name in the %scope table (see: name lookup) 
+** name mangling
+*** desc
+mangling is performed statically, and aware of name context
+*** opt potential
+this is likely going to be slow in the first few iterations, considering the mangling scheme needs to gather information about scope
+ideally it should be linear, but it will probably not be for hello world
+** name lookup
+*** desc
+blocks and lambdas introduce closures, which are managed explicitly by the runtime
+a name lookup relies on each closure-maintaining construct to bind a privileged local variable, `%scope`, to a pointer to that scope table, and a global function `@lookup` :: table* -> either tulip_value* nil
+scope tables must also maintain pointers to their parent tables, for normal reference semantics
+presumably these binding tables can be allocated within a region
+* branching
+** ssa
+*** TODO desc 
+*** TODO core
+*** TODO ir
+* literal
+** string interning
+*** desc
+strings expressed in literal form are interned and placed in a data-section-like global table, `@strings`
+they are marshalled back into closures at their first reference, so this is largely arbitrary now, but keeping them interned is of course a very easy optimization in the future
+*** TODO ir
+** number
+*** desc
+numbers are for the most part assumed to be floating-point values
+*** opt potential
+not all operations will need (or will expect) floating point ops, it should be a very immediate optimization goal to introduce integer-restricting optimizations, similar to how luajit narrows numerical types
+*** planning
+**** TODO decide on precision
+**** TODO look into luajit's integer narrowing passes

@@ -2,11 +2,12 @@ local Stubs = require 'lua/stubs'
 local Lexer = require 'lua/lexer'
 local Skeleton = require 'lua/skeleton'
 local List = require 'lua/list'
+local Lexer = require 'lua/lexer'
 
 local tag = Stubs.tag
 local tag_get = Stubs.tag_get
 
-function synthetic_token(name, value)
+local function synthetic_token(name, value)
   return Stubs.Token(Lexer.token_ids[name], value, '<synthetic>')
 end
 
@@ -14,7 +15,7 @@ local tok = synthetic_token
 
 local macro_registry = {}
 
-function define_builtin_macro(name, impl)
+local function define_builtin_macro(name, impl)
   if macro_registry[name] then error('macro ' .. name .. ' already exists!') end
 
   macro_registry[name] = impl
@@ -34,7 +35,7 @@ define_builtin_macro('list', function(skels)
   return out
 end)
 
-function macro_use(skel)
+local function macro_use(skel)
   if not matches_tag(skel, 'skeleton/nested', 3) then return nil end
   local open_tok = tag_get(skel, 0)
 
@@ -47,23 +48,7 @@ end
 
 local found_macro_state = {}
 
-function macro_expand_1(skels)
-  found_macro_state.value = false
-  local out = replace_macros(skels)
-  return found_macro_state.value, out
-end
-
-function macro_expand(skels)
-  local modified = true
-
-  while modified do
-    modified, skels = macro_expand_1(skels)
-  end
-
-  return skels
-end
-
-function replace_macros(skels)
+local function replace_macros(skels)
   return List.map(skels, function(skel)
     local macro_name = macro_use(skel)
 
@@ -78,6 +63,25 @@ function replace_macros(skels)
       return skel
     end
   end)
+end
+
+-- forward decl
+local macro_expand
+
+local function macro_expand_1(skels)
+  found_macro_state.value = false
+  local out = replace_macros(skels)
+  return found_macro_state.value, out
+end
+
+function macro_expand(skels)
+  local modified = true
+
+  while modified do
+    modified, skels = macro_expand_1(skels)
+  end
+
+  return skels
 end
 
 return {

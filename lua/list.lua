@@ -70,6 +70,33 @@ local function join(list, join_str)
   return out
 end
 
+local function each_slice(list, pred, fn)
+  local last = empty
+
+  each(list, function(el)
+    if pred(el) then
+      fn(reverse(last))
+    else
+      last = cons(el, last)
+    end
+  end)
+
+  fn(last)
+end
+
+local function split(list, pred)
+  local out = empty
+
+  each_slice(list, pred, function(slice)
+    out = cons(slice, out)
+  end)
+
+  return reverse(out)
+end
+
+local function foldr(list, init, fn)
+end
+
 Stubs.impl_inspect_tag('nil', 0, function() return '\\list()' end)
 Stubs.impl_inspect_tag('cons', 2, function(head, tail)
   local inspects = map(cons(head, tail), Stubs.inspect_value)
@@ -87,7 +114,9 @@ _G.List = {
   each = each,
   is_cons = is_cons,
   is_nil = is_nil,
-  join = join
+  join = join,
+  each_slice = each_slice,
+  split = split,
 }
 
 return List

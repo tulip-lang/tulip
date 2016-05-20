@@ -1,8 +1,9 @@
-Stubs = require 'lua/stubs'
+local Stubs = require 'lua/stubs'
+local Errors = require 'lua/errors'
 
-Token = Stubs.Token
+local Token = Stubs.Token
 
-token_names = {
+local token_names = {
   "LPAREN",
   "RPAREN",
 
@@ -47,16 +48,48 @@ token_names = {
   "INT",
   "NAME",
   "STRING",
+  "DQUOTE",
 
   "EOF"
 }
 
-token_ids = {}
+local token_ids = {}
 for index, name in ipairs(token_names) do
   token_ids[name] = index
 end
 
-function new(stream)
+local function is_nl(char)
+  if not char then return false end
+  return char == '\r' or char == '\n' or char == ';'
+end
+
+local function is_ws(char)
+  if not char then return false end
+  return char == ' ' or char == '\t'
+end
+
+local function is_alpha(char)
+  if not char then return false end
+  return ('a' <= char and char <= 'z') or
+         ('A' <= char and char <= 'Z')
+end
+
+local function is_digit(char)
+  if not char then return false end
+  return ('0' <= char and char <= '9')
+end
+
+local function is_ident_char(char)
+  if not char then return false end
+
+  return is_alpha(char) or
+         is_digit(char) or
+         char == '-' or
+         char == '_' or
+         char == '/'
+end
+
+local function new(stream)
   local state = {
     index = 0,
     line = 0,
@@ -69,6 +102,28 @@ function new(stream)
     peek = nil,
     final_loc = nil,
   }
+
+  -- what the fuck lua
+  local setup,
+        teardown,
+        reset,
+        recorded_value,
+        current_location,
+        error,
+        advance,
+        record,
+        end_record,
+        end_loc,
+        final_loc,
+        next,
+        peek,
+        skip_ws,
+        advance_through_ws,
+        skip_lines,
+        record_ident,
+        advance_through_string,
+        process_double_quote,
+        process_root
 
   function setup()
     stream.setup()
@@ -105,8 +160,14 @@ function new(stream)
     }
   end
 
+  function error(...)
+    return Errors.error('parse/lexer', ...)
+  end
+
   function advance()
-    assert(state.uninitialized or state.head)
+    if not (state.uninitialized or state.head) then
+      error('unexpected EOF')
+    end
 
     state.index = state.index + 1
     if state.head == "\n" then
@@ -155,7 +216,7 @@ function new(stream)
     local value = recorded_value()
     local final = final_loc()
 
-    assert(token == token_ids.EOF or state.index ~= start.index, 'must advance the stream!')
+    assert(token == token_ids.EOF or state.index ~= start.index, 'must advance the stream! (at ' .. start.index .. ')')
 
     return Token(token, value, { start = start, final = final })
   end
@@ -222,6 +283,23 @@ function new(stream)
     end
   end
 
+  function process_double_quote()
+    record()
+    while true do
+      if state.head == '\\' then
+        advance()
+      elseif state.head == '"' then
+        end_record()
+        advance()
+        break
+      elseif not state.head then
+        error('unmatched double quote')
+      end
+
+      advance()
+    end
+  end
+
   function process_root()
     if not state.head then return token_ids.EOF end
 
@@ -273,6 +351,13 @@ function new(stream)
         record_ident()
         return token_ids.STRING
       end
+    end
+
+    if state.head == '"' then
+      advance()
+
+      process_double_quote()
+      return token_ids.DQUOTE
     end
 
     if state.head == '`' then
@@ -491,42 +576,6 @@ function new(stream)
     next = next,
     peek = peek
   }
-end
-
-function is_nl(char)
-  if not char then return false end
-  return char == '\r' or char == '\n' or char == ';'
-end
-
-function is_ws(char)
-  if not char then return false end
-  return char == ' ' or char == '\t'
-end
-
-function is_alpha(char)
-  if not char then return false end
-  return ('a' <= char and char <= 'z') or
-         ('A' <= char and char <= 'Z')
-end
-
-function is_digit(char)
-  if not char then return false end
-  return ('0' <= char and char <= '9')
-end
-
-function is_ident_char(char)
-  if not char then return false end
-
-  return is_alpha(char) or is_digit(char) or char == '-' or char == '_'
-end
-
-function is_immediate(char)
-  if is_ws(char) then return false end
-  if is_alpha(char) then return true end
-  if char == ')' or char == ']' or char == '}' then return true end
-  if char == '$' or char == '-' then return true end
-
-  return false
 end
 
 return {

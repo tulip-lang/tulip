@@ -1,4 +1,6 @@
-string_reader = function(input)
+-- TODO: pass this into the compile function as a
+-- file or string reader
+function string_reader(input)
   local state = {
     index = 0
   }
@@ -14,7 +16,7 @@ string_reader = function(input)
   end
 
   function input_name()
-    return 'input string <' .. input .. '>'
+    return '{input-string}'
   end
 
   return {
@@ -25,50 +27,52 @@ string_reader = function(input)
   }
 end
 
-function inspect_skeletons(skeletons)
-  local out = {}
-  for k,v in pairs(skeletons) do
-    out[k] = inspect_one(v)
-  end
-
-  return table.concat(out, ' ')
-end
-
-function inspect_one(skel)
-  if skel.tag == 'nested' then
-    local open, close, body = unpack(skel.values)
-     return '[' .. inspect_token(open) .. ': ' .. inspect_skeletons(body) .. ' :' .. inspect_token(close) .. ']'
-  elseif skel.tag == 'token' then
-    local token = unpack(skel.values)
-    return inspect_token(token)
-  else
-    error('bad skeleton')
-  end
-end
-
+-- TODO implement in C
 function tag(name, ...)
   return { tag = name, values = {...} }
 end
 
-function inspect_tag(t)
-  out = '.' .. t.tag
-
-  for v in t.values do
-    out = out .. ' ' .. inspect_value(v)
-  end
+-- TODO implement in C
+function tag_get(obj, index)
+  return obj.values[index+1]
 end
 
+local tag_inspectors = {}
+
+function tag_key(name, arity) return name .. '@' .. tostring(arity) end
+
+function impl_inspect_tag(name, arity, impl)
+  tag_inspectors[tag_key(name, arity)] = impl
+end
+
+function inspect_tag(t)
+  local dyn_impl = tag_inspectors[tag_key(t.tag, #t.values)]
+  if dyn_impl then return dyn_impl(unpack(t.values)) end
+
+  local out = '(.' .. t.tag
+
+  for _,v in pairs(t.values) do
+    out = out .. ' ' .. inspect_value(v)
+  end
+
+  return out .. ')'
+end
+
+-- TODO implement in C
 function matches_tag(t, name, arity)
-  if not type(t) == 'table' then return false end
-  if not t.tag == name then return false end
-  if not #t.values == arity then return false end
+  if not (type(t) == 'table') then return false end
+  if not (t.tag == name) then return false end
+  if not (#t.values == arity) then return false end
   return true
 end
 
+-- TODO implement in C
 function inspect_value(t)
   if type(t) == 'table' and t.tag then return inspect_tag(t)
   elseif type(t) == 'table' and t.tokid then return inspect_token(t)
-  else return t
+  elseif type(t) == 'string' then return '\'{' .. t .. '}'
+  else
+    return tostring(t)
   end
 end
 
@@ -80,19 +84,39 @@ function Token(id, value, range)
   }
 end
 
+function inspect_loc(loc)
+  return loc.line .. ':' .. loc.column
+end
+
+function inspect_range(range)
+  if range == '<synthetic>' then return '' end
+
+  return '<' .. range.start.input .. ':' ..
+          inspect_loc(range.start) .. '-' ..
+          inspect_loc(range.final) .. '>'
+end
+
 function inspect_token(token)
   local name = token_names[token.tokid]
+  local range = inspect_range(token.range)
+  local raw = nil
+
   if token.value then
-    return name .. '(' .. token.value .. ')'
+    raw = name .. '(' .. token.value .. ')'
   else
-    return name
+    raw = name
   end
+
+  return raw .. '@' .. range
 end
 
 return {
   string_reader = string_reader,
   inspect_skeletons = inspect_skeletons,
   inspect_value = inspect_value,
+  matches_tag = matches_tag,
   tag = tag,
+  tag_get = tag_get,
   Token = Token,
+  impl_inspect_tag = impl_inspect_tag,
 }

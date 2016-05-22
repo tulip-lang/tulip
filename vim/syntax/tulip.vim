@@ -27,7 +27,7 @@ exe "syn match tlMacro /\\(\\\\" . ident . "\\)/"
 exe "syn match tlFlag /-" . ident . "/"
 syn match tlUppercase /[A-Z][a-zA-z0-9_-]*/
 
-syn match tlNumber /\d\+\(\.\d\+\)/
+syn match tlNumber /\d\+\(\.\d\+\)\?/
 
 syn match tlBareString /'[^{][^ 	\n)\];]*/
 syn region tlString start="'{" end="" contains=tlStringContents

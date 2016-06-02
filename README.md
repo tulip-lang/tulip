@@ -7,9 +7,9 @@
 ```
 
 [coc]: http://tinyurl.com/tulip-conduct "Code of Conduct"
-[post]: http://www.jneen.net/posts/2015-07-29-tulip-language-updated "Tulip"
+[intro]: https://github.com/tulip-lang/tulip/blob/master/doc/intro.md#readme
 
-[Tulip is a language!][post]
+[Tulip is a language!][intro]
 
 ## Why Tulip?
 
@@ -19,7 +19,7 @@
 * Flexible actor-based concurrency model with no shared state (lifted from Erlang, really)
 * A diverse core team, and a founder who is not cis, straight, or a man. Also a [real, enforced code of conduct][coc], and a pretty-flower aesthetic.
 
-For more details, please read the blog post linked above.
+For more details, please read the intro linked above.
 
 ## Contributing
 

@@ -1,19 +1,18 @@
-cflags = --std=c11 -Isrc/ -g -lm -lLLVM
-srcs   = src/types/core.c src/types/value.c src/runtime/init.c src/main.c
+cflags = --std=c11 -Isrc/ -g -lm -lLLVM -l"lua5.2"
+srcs   = src/types/core.c src/types/value.c src/runtime/init.c src/compiler/host.c src/main.c
 
-.PHONY: build run clean
+.PHONY: build run clean help
 
-build: types
+build: binary
 run:
-	./build/rt
+	./build/tulip
 clean:
 	rm build/**
+help:
+  echo "targets: build, run, clean"
 
-# TODO smarter makefile
-types:
-<<<<<<< HEAD
-	clang $(cflags) $(srcs) -o build/rt
-=======
+binary:
 	mkdir -p build
-	clang $(cflags) src/types/core.c src/types/value.c src/types/scaffold.c -o build/core
->>>>>>> 90ff531ea927db86ed90b3c1be5ddf60268ea583
+	clang $(cflags) $(srcs) -o build/tulip
+
+# library:

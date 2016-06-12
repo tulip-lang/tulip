@@ -522,17 +522,13 @@ local function new(stream)
         state.tape = {}
       end
 
-      if state.head == '[' then
-        advance()
-        skip_lines()
-        return token_ids.MACRO
-      elseif state.head == '{' then
+      if state.head == '{' then
         state.recording = true
         advance_through_string()
         end_record()
         return token_ids.PMACRO
       else
-        error('expected [')
+        return token_ids.MACRO
       end
     end
 

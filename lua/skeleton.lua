@@ -40,16 +40,59 @@ function unmatched(token, message)
   return tag('error', Errors.error('parse/unmatched', token, message))
 end
 
+local function inspect_items(items)
+  local inners = List.map(items, inspect_value)
+  return List.join(inners, ' ')
+end
+
 Stubs.impl_inspect_tag('skeleton/nested', 3, function(open, close, body)
-  return '\\skel[' .. inspect_value(open) .. ': ' .. inspect_value(body) .. ' :' .. inspect_value(close) .. ']'
+  local body_ = inspect_items(body)
+
+  return '\\skel[' .. inspect_value(open) .. ': ' .. body_ .. ' :' .. inspect_value(close) .. ']'
 end)
 
 Stubs.impl_inspect_tag('skeleton/token', 1, function(tok)
   return inspect_value(tok)
 end)
 
+Stubs.impl_inspect_tag('skeleton/item', 2, function(annotations, body)
+  local anns_ = List.join(List.map(annotations, inspect_value), '; ')
+  local body_ = List.join(List.map(body, inspect_value), '_')
+  return '(' .. anns_ .. ':' .. body_ .. ':)'
+end)
+
 function _parse_sequence(lexer, open_tok, expected_close_id)
   local elements = {}
+  local items = {}
+  local current_annotation = nil
+  local annotations = {}
+
+  local function flush_item()
+    if expected_close_id == token_ids.RPAREN then return end
+    if #elements == 0 then return end
+
+    table.insert(items, tag('skeleton/item', List.list(annotations), List.list(elements)))
+    elements = {}
+    annotations = {}
+  end
+
+  local function flush_annotation()
+    if current_annotation then
+      table.insert(annotations, tag('skeleton/annotation', List.list(elements)))
+
+      elements = {}
+    end
+  end
+
+  local function final_items()
+    if expected_close_id == token_ids.RPAREN then
+      return List.list(elements)
+    else
+      flush_item()
+
+      return List.list(items)
+    end
+  end
 
   while true do
     local tok = lexer.next()
@@ -60,10 +103,10 @@ function _parse_sequence(lexer, open_tok, expected_close_id)
       if open_tok then
         return unmatched(open_tok, token_names[expected_close_id])
       else
-        return List.list(elements)
+        return final_items()
       end
     elseif open_tok and tok.tokid == expected_close_id then
-      return tag('skeleton/nested', open_tok, tok, List.list(elements))
+      return tag('skeleton/nested', open_tok, tok, final_items())
     elseif is_closing(tok) then
       if open_tok then
         return unexpected(tok, tag('some', open_tok), 'invalid nesting')
@@ -75,11 +118,24 @@ function _parse_sequence(lexer, open_tok, expected_close_id)
     elseif tok.tokid == token_ids.LPAREN then
       table.insert(elements, _parse_sequence(lexer, tok, token_ids.RPAREN))
     elseif tok.tokid == token_ids.LBRACK or tok.tokid == token_ids.MACRO then
-      table.insert(elements, _parse_sequence(lexer, tok, token_ids.RBRACK))
+      local open = lexer.next()
+      if open.tokid == token_ids.LPAREN then
+        table.insert(elements, _parse_sequence(lexer, tok, token_ids.RPAREN))
+      elseif open.tokid == token_ids.RPAREN then
+        table.insert(elements, _parse_sequence(lexer, tok, token_ids.RBRACK))
+      else
+        return unexpected(open, tag('some', tok), 'invalid macro opening')
+      end
     elseif tok.tokid == token_ids.LBRACE then
       table.insert(elements, _parse_sequence(lexer, tok, token_ids.RBRACE))
-    elseif tok.tokid == token_ids.NL and expected_close_id == token_ids.RPAREN then
-      -- pass
+    elseif tok.tokid == token_ids.ANNOT or tok.tokid == token_ids.PANNOT then
+      flush_annotation()
+
+      current_annotation = elements
+      table.insert(current_annotation, tag('skeleton/token', tok))
+    elseif tok.tokid == token_ids.NL then
+      flush_annotation()
+      flush_item()
     elseif tok.tokid == token_ids.NL and eats_preceding_newline[lexer.peek().tokid] then
       -- pass
     else

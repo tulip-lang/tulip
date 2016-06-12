@@ -21,18 +21,22 @@ local function define_builtin_macro(name, impl)
   macro_registry[name] = impl
 end
 
--- TODO: actually separate by ;
+local function is_token(skel, toktype)
+  if not matches_tag(skel, 'skeleton/token', 1) then return false end
+  return tag_get(skel, 0).tokid == Lexer.token_ids[toktype]
+end
+
+local function brace(items)
+  return tag('skeleton/nested', tok('LBRACE', nil), tok('RBRACE', nil), items)
+end
+
 define_builtin_macro('list', function(skels)
-  local out = tag('token', tok('TAGGED', 'nil'))
-
-  List.each(skels, function(skel)
-    out = tag('skeleton/nested', tok('LPAREN', nil), tok('RPAREN', nil),
+  return List.foldr(skels, tag('token', tok('TAGGED', 'nil')), function(el, next)
+    return tag('skeleton/nested', tok('LBRACE', nil), tok('RBRACE', nil),
               List.list{tag('token', tok('TAGGED', 'cons')),
-                        skel,
-                        out})
+                        el,
+                        next})
   end)
-
-  return out
 end)
 
 local function macro_use(skel)
@@ -55,10 +59,15 @@ local function replace_macros(skels)
     if macro_name then
       found_macro_state.value = true
       return macro_registry[macro_name](tag_get(skel, 2))
-    elseif skel.tag == 'nested' then
-      return tag('nested', tag_get(skel, 0),
-                           tag_get(skel, 1),
-                           replace_macros(tag_get(skel, 2)))
+    elseif skel.tag == 'skeleton/nested' then
+      return tag('skeleton/nested', tag_get(skel, 0),
+                                    tag_get(skel, 1),
+                                    replace_macros(tag_get(skel, 2)))
+    elseif skel.tag == 'skeleton/item' then
+      return tag('skeleton/item', replace_macros(tag_get(skel, 0)),
+                                  replace_macros(tag_get(skel, 1)))
+    elseif skel.tag == 'skeleton/annotation' then
+      return tag('skeleton/annotation', replace_macros(tag_get(skel, 0)))
     else
       return skel
     end

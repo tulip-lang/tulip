@@ -14,3 +14,7 @@ local function compile(reader)
 
   return errors, out
 end
+
+return {
+  compile = compile
+}

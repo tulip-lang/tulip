@@ -50,6 +50,18 @@ local function map_reverse(list, fn)
   return out
 end
 
+local function foldl(list, accum, fn)
+  if is_nil(list) then return accum end
+
+  return foldl(tail(list), fn(accum, head(list)), fn)
+end
+
+local function foldr(list, init, fn)
+  if is_nil(list) then return init end
+
+  return fn(head(list), foldr(tail(list), init, fn))
+end
+
 local function reverse(list)
   return map_reverse(list, function(x) return x end)
 end
@@ -94,7 +106,10 @@ local function split(list, pred)
   return reverse(out)
 end
 
-local function foldr(list, init, fn)
+local function size(list)
+  local count = 0
+  each(list, function(_) count = count + 1 end)
+  return count
 end
 
 Stubs.impl_inspect_tag('nil', 0, function() return '\\list()' end)
@@ -117,6 +132,9 @@ _G.List = {
   join = join,
   each_slice = each_slice,
   split = split,
+  size = size,
+  foldl = foldl,
+  foldr = foldr,
 }
 
 return List

@@ -47,12 +47,13 @@ tulip_runtime_state tulip_runtime_start() {
   struct LLVMMCJITCompilerOptions o;
   LLVMInitializeMCJITCompilerOptions(&o, sizeof(o));
   // jit option flags can be set here
-  char** error;
+  char* error = "";
 
   // it's likely that we'll want multiple modules (one for each process) with a shared mcjit instance, but for now it's safe to run it like this
-  if(LLVMCreateMCJITCompilerForModule(&(state.jit_instance), state.toplevel_module, &o, sizeof(o), error)) {
+  if(LLVMCreateMCJITCompilerForModule(&(state.jit_instance), state.toplevel_module, &o, sizeof(o), &error)) {
     printf("initialized mcjit\n");
   } else {
+    // [issue] this call errors now
     printf("%s\n", error);
   }
 

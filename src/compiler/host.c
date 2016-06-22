@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <lauxlib.h>
+#include <lualib.h>
 #include <string.h>
 
 #include "compiler/host.h"
@@ -119,7 +120,9 @@ int Lcompiler_inspect_value(lua_State* s) {
 
 tulip_compiler_state* tulip_compiler_start() {
   tulip_compiler_state* state = malloc(sizeof(tulip_compiler_state));
+
   state->lua_state = luaL_newstate();
+  luaL_openlibs(state->lua_state);
 
   // wrap and inject the utility functions defined above
   lua_pushcfunction(state->lua_state, Lchar_reader_setup);
@@ -139,9 +142,17 @@ tulip_compiler_state* tulip_compiler_start() {
   lua_setglobal(state->lua_state, "__compiler_inspect_value");
 
   // [todo] better loading of lua sources
-  luaL_dofile(state->lua_state, "./lua/export.lua");
+  if (luaL_dofile(state->lua_state, "./lua/export.lua")) {
+    printf("lua loadtime error: %s\n", lua_tostring(state->lua_state, -1));
+  }
+
   lua_getglobal(state->lua_state, "compile");
-  lua_call(state->lua_state, 1, 2);
+
+  if (lua_pcall(state->lua_state, 0, 1, 0) != 0) {
+    printf("lua runtime error: %s\n", lua_tostring(state->lua_state, -1));
+  }
+
+  return state;
 }
 
 void tulip_compiler_stop(tulip_compiler_state* state) {
